@@ -1,12 +1,11 @@
-import { Resource } from "./note";
+import { Resource } from './note';
 
-export interface TrainNote extends Resource{
+export interface TrainNote extends Resource {
   nextReminder: Date;
   currentPhase: Phase;
 }
 
-export interface Phase{
+export interface Phase {
   phase: number;
   days: number;
 }
-
