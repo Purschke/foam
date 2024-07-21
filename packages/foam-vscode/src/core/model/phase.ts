@@ -15,7 +15,7 @@ export class Phases {
     return this.phases[0];
   }
 
-  public Next(phase: Phase): Phase {
+  public Next(phase: Phase): Phase | undefined {
     for (let i = 0; i < this.phases.length; i++) {
       if (this.phases[i] == phase) {
         return Phases[i++];
@@ -23,7 +23,7 @@ export class Phases {
     }
   }
 
-  public Return(phase: Phase): Phase {
+  public Return(phase: Phase): Phase | undefined {
     for (let i = 0; i < this.phases.length; i++) {
       if (this.phases[i] == phase) {
         return Phases[i--];

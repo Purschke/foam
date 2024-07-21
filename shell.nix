@@ -7,6 +7,6 @@ pkgs.mkShellNoCC {
     nodejs_21
     typescript
     yarn
-    nix-shell -p nodePackages_latest.lerna
+    nodePackages_latest.lerna
   ];
 }
