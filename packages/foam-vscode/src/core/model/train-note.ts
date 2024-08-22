@@ -1,7 +1,12 @@
 import { Resource } from './note';
-import { Phase } from './phase';
+import { Phase, Phases } from './phase';
 
-export interface TrainNote extends Resource {
+export class TrainNote extends Resource {
   nextReminder: Date;
   currentPhase: Phase;
+  phases: Phases;
+
+  constructor() {
+    super();
+  }
 }
