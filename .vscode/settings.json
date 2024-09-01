@@ -31,5 +31,11 @@
   "search.mode": "reuseEditor",
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "terminal.integrated.automationProfile.linux": {
+    "path": "${workspaceRoot}/.vscode/nix-shell-or-bash.sh",
+    "env": {
+      "PROJ_DIR": "${workspaceRoot}"
+    }
   }
 }
