@@ -1,6 +1,6 @@
 import { URI } from '../model/uri';
 import { IDataStore } from './datastore'
-import fs, { writeFile } from 'fs'
+import fs from 'fs';
 
 export class FileSystem implements IDataStore {
   root: string;
@@ -10,32 +10,37 @@ export class FileSystem implements IDataStore {
   }
 
   //TODO: why list dont use parameter as root?
-  async list(): Promise<URI[]> {
-    var files = new Array<URI>();
-    await fs.readdir(this.root, (err, data) => {
-      if(!err){
-        data.forEach(file => {
-          files.push(URI.parse(file));
-        });
-      }
-    });
-
-    return files;
-  }
-
-  async read (uri: URI): Promise<string | null> {
-    var content : string = "";
-    await fs.readFile(this.root, { encoding: 'utf8' }, (err, data) => {
-      if(!err){
-        content = data;
-      }
-    });
+  list(): Promise<URI[]> {
+    let files: URI[] = [];
     
-    return content;
+    return new Promise((resolve, reject) => {
+      fs.readdir(this.root, (err, data) => {
+        if(!err){
+          data.forEach(file => {
+            files.push(URI.parse(file));
+          });
+        } else{
+          reject(err);
+        }
+
+        resolve(files);
+      });
+    });
+}
+
+  read (uri: URI): Promise<string | null> {
+    return new Promise ((resolve, reject) => {
+      fs.readFile(uri.path, { encoding: 'utf8' }, (err, data) => {
+        if(!err){
+          resolve(data);
+        }
+        reject(err);
+      });
+    });
   }
 
   async write(uri: URI, content: string) {
-    await fs.writeFile(uri.path, content, () => {
+    await fs.writeFile(uri.path, content, (err) => {
 
     });
   }
