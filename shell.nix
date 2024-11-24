@@ -19,6 +19,7 @@ pkgs.mkShellNoCC {
     (vscode-with-extensions.override {
         vscodeExtensions = with vscode-extensions; [
           mkhl.direnv
+          dbaeumer.vscode-eslint
         ] ++ pkgs.vscode-utils.extensionsFromVscodeMarketplace [
         { 
             name = "vscode-jest";
