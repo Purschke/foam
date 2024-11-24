@@ -280,4 +280,23 @@ describe('NoteFactory.createNote', () => {
     await deleteFile(file.uri);
     await deleteFile(target);
   });
+
+  describe('NoteFactory.createTrainNote', () => {
+    beforeEach(async () => {
+      await closeEditors();
+    });
+    it('should create a new Trainnote', async () => {
+      const target = getUriInWorkspace();
+      await NoteFactory.createTrainNote(
+        target,
+        'Hello World',
+        new Resolver(new Map(), new Date())
+      );
+      expect(await fileExists(target)).toBeTruthy();
+      expect(window.activeTextEditor.document.getText()).toEqual(
+        'Hello World\n [ ] Training Note'
+      );
+      await deleteFile(target);
+    });
+  });
 });
