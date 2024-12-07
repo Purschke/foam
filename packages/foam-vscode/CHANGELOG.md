@@ -4,6 +4,18 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.26.4] - 2024-11-12
+
+Fixes and Improvements:
+
+- Improved handling of virtual FS URIs (#1409)
+
+## [0.26.3] - 2024-11-12
+
+Fixes and Improvements:
+
+- Finetuned use of triemap (#1411 - thanks @pderaaij)
+
 ## [0.26.2] - 2024-11-06
 
 Fixes and Improvements:
