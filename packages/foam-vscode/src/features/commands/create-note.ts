@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { URI } from '../../core/model/uri';
 import {
+  aksUserForTrainingNote,
   askUserForTemplate,
   getDefaultTemplateUri,
   getPathFromTitle,
@@ -76,6 +77,8 @@ interface CreateNoteArgs {
     | 'resolve-from-current-dir'
     | 'ask'
     | 'cancel';
+
+  training_note?: boolean;
 }
 
 const DEFAULT_NEW_NOTE_TEXT = `# \${FOAM_TITLE}
@@ -107,11 +110,15 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
       ? asAbsoluteWorkspaceUri(URI.file(args.templatePath))
       : getDefaultTemplateUri();
   }
+  if (args.training_note) {
+    args.training_note = await aksUserForTrainingNote();
+  }
 
   const createdNote = (await fileExists(templateUri))
     ? await NoteFactory.createFromTemplate(
         templateUri,
         resolver,
+        args.training_note,
         noteUri,
         text,
         args.onFileExists
@@ -120,6 +127,7 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
         noteUri ?? (await getPathFromTitle(resolver)),
         text,
         resolver,
+        args.training_note,
         args.onFileExists,
         args.onRelativeNotePath
       );

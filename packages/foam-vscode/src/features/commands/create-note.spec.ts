@@ -236,6 +236,7 @@ foam_template:
         Location.forObjectWithRange(noteA.uri, res.links[0]),
         '.md',
         {
+          training_note: false,
           templatePath: templateA.uri.path,
         }
       );

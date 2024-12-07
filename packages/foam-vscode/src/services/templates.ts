@@ -168,6 +168,17 @@ export async function askUserForTemplate() {
   return templateUri;
 }
 
+export async function aksUserForTrainingNote() {
+  const response = await window.showQuickPick(['Yes', 'No'], {
+    placeHolder: 'Do you want to learn that note?',
+  });
+
+  if (response === 'Yes') {
+    return true;
+  }
+  return false;
+}
+
 async function offerToCreateTemplate(): Promise<void> {
   const response = await window.showQuickPick(['Yes', 'No'], {
     placeHolder:
@@ -262,16 +273,29 @@ const createFnForOnFileExistsStrategy =
     }
   };
 
+function MarkAsTrainNote(text: string) {
+  var trainnote = '\n[ ] Training Note';
+  if (!text.includes(trainnote)) {
+    text += trainnote;
+  }
+
+  return text;
+}
+
 export const NoteFactory = {
   createNote: async (
     newFilePath: URI,
     text: string,
     resolver: Resolver,
+    trainNote: boolean = false,
     onFileExistsStrategy?: OnFileExistStrategy,
     onRelativePathStrategy?: OnRelativePathStrategy,
     replaceSelectionWithLink = true
   ): Promise<{ didCreateFile: boolean; uri: URI | undefined }> => {
     try {
+      if (trainNote) {
+        text = MarkAsTrainNote(text);
+      }
       const onRelativePath = createFnForOnRelativePathStrategy(
         onRelativePathStrategy
       );
@@ -327,26 +351,6 @@ export const NoteFactory = {
     }
   },
 
-  createTrainNote: async (
-    newFilePath: URI,
-    text: string,
-    resolver: Resolver,
-    onFileExistsStrategy?: OnFileExistStrategy,
-    onRelativePathStrategy?: OnRelativePathStrategy,
-    replaceSelectionWithLink = true
-  ): Promise<{ didCreateFile: boolean; uri: URI | undefined }> => {
-    var trainnote = '\n [ ] Training Note';
-    text += trainnote;
-    return NoteFactory.createNote(
-      newFilePath,
-      text,
-      resolver,
-      onFileExistsStrategy,
-      onRelativePathStrategy,
-      replaceSelectionWithLink
-    );
-  },
-
   /**
    * Creates a new note using a template.
    * @param templateUri the URI of the template to use.
@@ -357,6 +361,7 @@ export const NoteFactory = {
   createFromTemplate: async (
     templateUri: URI,
     resolver: Resolver,
+    training_note: boolean = false,
     filepathFallbackURI?: URI,
     templateFallbackText = '',
     onFileExists?: OnFileExistStrategy
@@ -382,6 +387,7 @@ export const NoteFactory = {
         newFilePath,
         template.text,
         resolver,
+        training_note,
         onFileExists
       );
     } catch (err) {
@@ -409,6 +415,7 @@ export const NoteFactory = {
     return NoteFactory.createFromTemplate(
       getDailyNoteTemplateUri(),
       resolver,
+      false,
       filepathFallbackURI,
       templateFallbackText,
       _ => Promise.resolve(undefined)
@@ -438,6 +445,7 @@ export const NoteFactory = {
     return NoteFactory.createFromTemplate(
       templateURI,
       resolver,
+      false,
       filepathFallbackURI,
       WIKILINK_DEFAULT_TEMPLATE_TEXT
     );
