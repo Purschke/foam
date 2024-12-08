@@ -13,6 +13,7 @@ const knownFoamVariables = new Set([
   'FOAM_TITLE_SAFE',
   'FOAM_SLUG',
   'FOAM_SELECTED_TEXT',
+  'FOAM_TRAINING_NOTE',
   'FOAM_DATE_YEAR',
   'FOAM_DATE_YEAR_SHORT',
   'FOAM_DATE_MONTH',
@@ -142,6 +143,9 @@ export class Resolver implements VariableResolver {
         case 'FOAM_SELECTED_TEXT':
           value = Promise.resolve(resolveFoamSelectedText());
           break;
+        case 'FOAM_TRAINING_NOTE':
+          value = resolveTrainingNote();
+          break;
         case 'FOAM_DATE_YEAR':
           value = Promise.resolve(String(this.foamDate.getFullYear()));
           break;
@@ -245,6 +249,23 @@ async function resolveFoamTitle() {
 
 function resolveFoamSelectedText() {
   return findSelectionContent()?.content ?? '';
+}
+
+async function resolveTrainingNote() {
+  let trainingNote = false;
+  const response = await window.showQuickPick(['Yes', 'No'], {
+    placeHolder: 'Do you really want to learn this Note?',
+  });
+
+  if (response === 'Yes') {
+    trainingNote = true;
+  } else if (response === 'No') {
+    trainingNote = false;
+  } else {
+    throw new UserCancelledOperation();
+  }
+
+  return trainingNote.toString();
 }
 
 /**

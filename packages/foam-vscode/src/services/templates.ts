@@ -327,26 +327,6 @@ export const NoteFactory = {
     }
   },
 
-  createTrainNote: async (
-    newFilePath: URI,
-    text: string,
-    resolver: Resolver,
-    onFileExistsStrategy?: OnFileExistStrategy,
-    onRelativePathStrategy?: OnRelativePathStrategy,
-    replaceSelectionWithLink = true
-  ): Promise<{ didCreateFile: boolean; uri: URI | undefined }> => {
-    var trainnote = '\n [ ] Training Note';
-    text += trainnote;
-    return NoteFactory.createNote(
-      newFilePath,
-      text,
-      resolver,
-      onFileExistsStrategy,
-      onRelativePathStrategy,
-      replaceSelectionWithLink
-    );
-  },
-
   /**
    * Creates a new note using a template.
    * @param templateUri the URI of the template to use.
