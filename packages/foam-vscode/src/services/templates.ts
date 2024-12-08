@@ -287,15 +287,11 @@ export const NoteFactory = {
     newFilePath: URI,
     text: string,
     resolver: Resolver,
-    trainNote: boolean = false,
     onFileExistsStrategy?: OnFileExistStrategy,
     onRelativePathStrategy?: OnRelativePathStrategy,
     replaceSelectionWithLink = true
   ): Promise<{ didCreateFile: boolean; uri: URI | undefined }> => {
     try {
-      if (trainNote) {
-        text = MarkAsTrainNote(text);
-      }
       const onRelativePath = createFnForOnRelativePathStrategy(
         onRelativePathStrategy
       );
@@ -361,7 +357,6 @@ export const NoteFactory = {
   createFromTemplate: async (
     templateUri: URI,
     resolver: Resolver,
-    training_note: boolean = false,
     filepathFallbackURI?: URI,
     templateFallbackText = '',
     onFileExists?: OnFileExistStrategy
@@ -387,7 +382,6 @@ export const NoteFactory = {
         newFilePath,
         template.text,
         resolver,
-        training_note,
         onFileExists
       );
     } catch (err) {
@@ -415,7 +409,6 @@ export const NoteFactory = {
     return NoteFactory.createFromTemplate(
       getDailyNoteTemplateUri(),
       resolver,
-      false,
       filepathFallbackURI,
       templateFallbackText,
       _ => Promise.resolve(undefined)
@@ -445,7 +438,6 @@ export const NoteFactory = {
     return NoteFactory.createFromTemplate(
       templateURI,
       resolver,
-      false,
       filepathFallbackURI,
       WIKILINK_DEFAULT_TEMPLATE_TEXT
     );

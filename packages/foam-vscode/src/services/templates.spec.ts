@@ -84,7 +84,6 @@ describe('Create note from template', () => {
       await NoteFactory.createFromTemplate(
         templateA.uri,
         new Resolver(new Map(), new Date()),
-        false,
         fileA.uri
       );
       expect(spy).toHaveBeenCalledWith(
@@ -131,7 +130,6 @@ foam_template: # foam template metadata
       await NoteFactory.createFromTemplate(
         templateA.uri,
         new Resolver(new Map(), new Date()),
-        false,
         target
       );
       expect(fromVsCodeUri(window.activeTextEditor.document.uri)).toEqual(
@@ -154,7 +152,6 @@ foam_template: # foam template metadata
     await NoteFactory.createFromTemplate(
       template.uri,
       new Resolver(new Map(), new Date()),
-      false,
       target
     );
 
@@ -180,7 +177,6 @@ foam_template: # foam template metadata
       await NoteFactory.createFromTemplate(
         templateA.uri,
         new Resolver(new Map(), new Date()),
-        false,
         target
       );
       expect(window.activeTextEditor.viewColumn).toEqual(ViewColumn.Two);
@@ -209,7 +205,6 @@ foam_template: # foam template metadata
       await NoteFactory.createFromTemplate(
         template.uri,
         new Resolver(new Map(), new Date()),
-        false,
         target
       );
       expect(window.activeTextEditor.document.getText()).toEqual(
@@ -249,7 +244,6 @@ describe('NoteFactory.createNote', () => {
       target,
       'Hello ${FOAM_SELECTED_TEXT} ${FOAM_SELECTED_TEXT}', // eslint-disable-line no-template-curly-in-string
       new Resolver(new Map(), new Date()),
-      false,
       undefined,
       undefined,
       false
@@ -273,7 +267,6 @@ describe('NoteFactory.createNote', () => {
       target,
       'Hello ${FOAM_SELECTED_TEXT} ${FOAM_SELECTED_TEXT}', // eslint-disable-line no-template-curly-in-string
       new Resolver(new Map(), new Date()),
-      false,
       undefined,
       undefined,
       true
@@ -294,11 +287,10 @@ describe('NoteFactory.createNote', () => {
     });
     it('should create a new Trainnote', async () => {
       const target = getUriInWorkspace();
-      await NoteFactory.createNote(
+      await NoteFactory.createTrainNote(
         target,
         'Hello World',
-        new Resolver(new Map(), new Date()),
-        true
+        new Resolver(new Map(), new Date())
       );
       expect(await fileExists(target)).toBeTruthy();
       expect(window.activeTextEditor.document.getText()).toContain(
