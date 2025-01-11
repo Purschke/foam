@@ -273,15 +273,6 @@ const createFnForOnFileExistsStrategy =
     }
   };
 
-function MarkAsTrainNote(text: string) {
-  var trainnote = '\n[ ] Training Note';
-  if (!text.includes(trainnote)) {
-    text += trainnote;
-  }
-
-  return text;
-}
-
 export const NoteFactory = {
   createNote: async (
     newFilePath: URI,

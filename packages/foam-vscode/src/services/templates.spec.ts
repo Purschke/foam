@@ -245,8 +245,7 @@ describe('NoteFactory.createNote', () => {
       'Hello ${FOAM_SELECTED_TEXT} ${FOAM_SELECTED_TEXT}', // eslint-disable-line no-template-curly-in-string
       new Resolver(new Map(), new Date()),
       undefined,
-      undefined,
-      false
+      undefined
     );
     expect(window.activeTextEditor.document.getText()).toEqual(
       'Hello World World'
@@ -279,24 +278,5 @@ describe('NoteFactory.createNote', () => {
     );
     await deleteFile(file.uri);
     await deleteFile(target);
-  });
-
-  describe('NoteFactory.createTrainNote', () => {
-    beforeEach(async () => {
-      await closeEditors();
-    });
-    it('should create a new Trainnote', async () => {
-      const target = getUriInWorkspace();
-      await NoteFactory.createTrainNote(
-        target,
-        'Hello World',
-        new Resolver(new Map(), new Date())
-      );
-      expect(await fileExists(target)).toBeTruthy();
-      expect(window.activeTextEditor.document.getText()).toContain(
-        '[ ] Training Note'
-      );
-      await deleteFile(target);
-    });
   });
 });
