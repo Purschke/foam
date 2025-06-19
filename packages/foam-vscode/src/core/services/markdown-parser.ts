@@ -14,14 +14,107 @@ import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
 import { ICache } from '../utils/cache';
 
-export interface ParserPlugin {
+export interface ParserPlugin<T> {
   name?: string;
-  visit?: (node: Node, note: Resource, noteSource: string) => void;
+  visit?: (node: Node, target: T, noteSource: string) => void;
   onDidInitializeParser?: (parser: unified.Processor) => void;
   onWillParseMarkdown?: (markdown: string) => string;
-  onWillVisitTree?: (tree: Node, note: Resource) => void;
-  onDidVisitTree?: (tree: Node, note: Resource) => void;
-  onDidFindProperties?: (properties: any, note: Resource, node: Node) => void;
+  onWillVisitTree?: (tree: Node, target: T) => void;
+  onDidVisitTree?: (tree: Node, target: T) => void;
+  onDidFindProperties?: (properties: any, target: T, node: Node) => void;
+}
+
+export class MarkdownParser<T> implements ResourceParser<T> {
+  constructor(
+    private plugins: ParserPlugin<T>[],
+    private cache: ParserCache,
+    private factory: () => T
+  ) {}
+
+  private readonly parser = unified()
+    .use(markdownParse, { gfm: true })
+    .use(frontmatterPlugin, ['yaml'])
+    .use(wikiLinkPlugin, { aliasDivider: '|' });
+
+  public parse(uri: URI, markdown: string): T {
+    Logger.debug('Parsing:', uri.toString());
+
+    const target: T = this.factory();
+
+    this.invokeWillParseMarkdown(uri, markdown);
+    const tree = this.parser.parse(markdown);
+
+    this.invokeWillVisitTree(tree, uri, target);
+    this.traverseSyntaxTree(tree, uri, target, markdown);
+    this.invokeDidVisit(tree, uri, target);
+
+    Logger.debug('Result:', target);
+    return target;
+  }
+
+  private invokeWillParseMarkdown(uri: URI, markdown: string) {
+    for (const plugin of this.plugins) {
+      try {
+        plugin.onWillParseMarkdown?.(markdown);
+      } catch (e) {
+        handleError(plugin, 'onWillParseMarkdown', uri, e);
+      }
+    }
+  }
+
+  private invokeWillVisitTree(tree, uri: URI, target: T) {
+    for (const plugin of this.plugins) {
+      try {
+        plugin.onWillVisitTree?.(tree, target);
+      } catch (e) {
+        handleError(plugin, 'onWillVisitTree', uri, e);
+      }
+    }
+  }
+
+  private traverseSyntaxTree(tree, uri: URI, target: T, markdown: string) {
+    visit(tree, node => {
+      this.invokeDidFindProperties(node, uri, target);
+      this.visit(node, target, markdown, uri);
+    });
+  }
+
+  private invokeDidFindProperties(node: Node, uri: URI, target: T) {
+    if (node.type === 'yaml') {
+      try {
+        const yamlProperties = parseYAML((node as any).value) ?? {};
+        for (const plugin of this.plugins) {
+          try {
+            plugin.onDidFindProperties?.(yamlProperties, target, node);
+          } catch (e) {
+            handleError(plugin, 'onDidFindProperties', uri, e);
+          }
+        }
+      } catch (e) {
+        Logger.warn(`Error while parsing YAML for [${uri.toString()}]`, e);
+      }
+    }
+  }
+
+  private visit(node: Node, target: T, markdown: string, uri: URI) {
+    for (const plugin of this.plugins) {
+      try {
+        plugin.visit?.(node, target, markdown);
+      } catch (e) {
+        handleError(plugin, 'visit', uri, e);
+      }
+    }
+  }
+
+  private invokeDidVisit(tree, uri: URI, target: T) {
+    for (const plugin of this.plugins) {
+      try {
+        plugin.onDidVisitTree?.(tree, target);
+      } catch (e) {
+        handleError(plugin, 'onDidVisitTree', uri, e);
+      }
+    }
+  }
 }
 
 type Checksum = string;
