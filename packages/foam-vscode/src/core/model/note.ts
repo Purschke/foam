@@ -57,7 +57,7 @@ export interface Resource {
   definitions: NoteLinkDefinition[];
 }
 
-export interface ResourceParser {
+export interface ResourceParser<T extends Resource> {
   parse: (uri: URI, text: string) => Resource;
 }
 
