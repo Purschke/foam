@@ -77,7 +77,11 @@ export function createMarkdownParser<T extends Resource>(
   ) => {
     for (const plugin of plugins) {
       try {
-        plugin[hook]?.(...args);
+        (
+          plugin[hook] as (
+            ...args: Parameters<NonNullable<ParserPlugin<T>[K]>>
+          ) => void
+        )?.(...args);
       } catch (e) {
         handleError(plugin, hook as string, uri, e);
       }
