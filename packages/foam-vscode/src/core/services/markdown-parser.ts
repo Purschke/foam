@@ -26,9 +26,9 @@ export interface ParserPlugin<T> {
 
 type Checksum = string;
 
-export interface ParserCacheEntry {
+export interface ParserCacheEntry<T> {
   checksum: Checksum;
-  resource: Resource;
+  target: T;
 }
 
 /**
@@ -39,12 +39,12 @@ export interface ParserCacheEntry {
  *
  * If the URI and the Checksum have not changed, the cached resource is returned.
  */
-export type ParserCache = ICache<URI, ParserCacheEntry>;
+export type ParserCache<T> = ICache<URI, ParserCacheEntry<T>>;
 
 export function createMarkdownParser<T extends Resource>(
   extraPlugins: ParserPlugin<T>[] = [],
   factory: () => T,
-  cache?: ParserCache
+  cache?: ParserCache<T>
 ): ResourceParser<T> {
   const parser = unified()
     .use(markdownParse, { gfm: true })
@@ -122,18 +122,18 @@ export function createMarkdownParser<T extends Resource>(
     },
   };
 
-  const cachedParser: ResourceParser = {
-    parse: (uri: URI, markdown: string): Resource => {
+  const cachedParser: ResourceParser<T> = {
+    parse: (uri: URI, markdown: string): T => {
       const actualChecksum = hash(markdown);
       if (cache.has(uri)) {
-        const { checksum, resource } = cache.get(uri);
+        const { checksum, target } = cache.get(uri);
         if (actualChecksum === checksum) {
-          return resource;
+          return target;
         }
       }
-      const resource = foamParser.parse(uri, markdown);
-      cache.set(uri, { checksum: actualChecksum, resource });
-      return resource;
+      const parsedTarget = foamParser.parse(uri, markdown);
+      cache.set(uri, { checksum: actualChecksum, target: parsedTarget });
+      return parsedTarget;
     },
   };
 

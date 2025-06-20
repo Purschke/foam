@@ -58,7 +58,7 @@ export interface Resource {
 }
 
 export interface ResourceParser<T extends Resource> {
-  parse: (uri: URI, text: string) => Resource;
+  parse: (uri: URI, text: string) => T;
 }
 
 export abstract class Resource {
