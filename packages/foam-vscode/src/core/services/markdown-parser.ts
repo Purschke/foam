@@ -156,7 +156,7 @@ const getTextFromChildren = (root: Node): string => {
   return text;
 };
 
-const tagsPlugin: ParserPlugin = {
+const tagsPlugin: ParserPlugin<Resource> = {
   name: 'tags',
   onDidFindProperties: (props, note, node) => {
     if (isSome(props.tags)) {
@@ -189,7 +189,7 @@ const tagsPlugin: ParserPlugin = {
 };
 
 let sectionStack: Array<{ label: string; level: number; start: Position }> = [];
-const sectionsPlugin: ParserPlugin = {
+const sectionsPlugin: ParserPlugin<Resource> = {
   name: 'section',
   onWillVisitTree: () => {
     sectionStack = [];
@@ -238,7 +238,7 @@ const sectionsPlugin: ParserPlugin = {
   },
 };
 
-const titlePlugin: ParserPlugin = {
+const titlePlugin: ParserPlugin<Resource> = {
   name: 'title',
   visit: (node, note) => {
     if (
@@ -261,7 +261,7 @@ const titlePlugin: ParserPlugin = {
   },
 };
 
-const aliasesPlugin: ParserPlugin = {
+const aliasesPlugin: ParserPlugin<Resource> = {
   name: 'aliases',
   onDidFindProperties: (props, note, node) => {
     if (isSome(props.alias)) {
@@ -278,7 +278,7 @@ const aliasesPlugin: ParserPlugin = {
   },
 };
 
-const wikilinkPlugin: ParserPlugin = {
+const wikilinkPlugin: ParserPlugin<Resource> = {
   name: 'wikilink',
   visit: (node, note, noteSource) => {
     if (node.type === 'wikiLink') {
@@ -328,7 +328,7 @@ const wikilinkPlugin: ParserPlugin = {
   },
 };
 
-const definitionsPlugin: ParserPlugin = {
+const definitionsPlugin: ParserPlugin<Resource> = {
   name: 'definitions',
   visit: (node, note) => {
     if (node.type === 'definition') {
