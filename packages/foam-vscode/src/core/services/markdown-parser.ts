@@ -360,8 +360,8 @@ const propertiesPlugin: ParserPlugin<Resource> = {
   },
 };
 
-const handleError = (
-  plugin: ParserPlugin,
+const handleError = <T>(
+  plugin: ParserPlugin<T>,
   fnName: string,
   uri: URI | undefined,
   e: Error
