@@ -360,6 +360,15 @@ const propertiesPlugin: ParserPlugin<Resource> = {
   },
 };
 
+const typePlugin: ParserPlugin<{ type: undefined }> = {
+  name: 'type',
+  onDidFindProperties: (properties, target, node: Node) => {
+    if ('type' in properties) {
+      target.type = properties.type;
+    }
+  },
+};
+
 const handleError = <T>(
   plugin: ParserPlugin<T>,
   fnName: string,
