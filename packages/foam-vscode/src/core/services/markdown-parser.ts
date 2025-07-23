@@ -41,28 +41,58 @@ export interface ParserCacheEntry<T> {
  */
 export type ParserCache<T> = ICache<URI, ParserCacheEntry<T>>;
 
-export function createMarkdownParser<T extends Resource>(
-  extraPlugins: ParserPlugin<T>[] = [],
-  factory: () => T,
-  cache?: ParserCache<T>
-): ResourceParser<T> {
-  const parser = unified()
-    .use(markdownParse, { gfm: true })
-    .use(frontmatterPlugin, ['yaml'])
-    .use(wikiLinkPlugin, { aliasDivider: '|' });
+export class FoamParser<T> implements ResourceParser<T> {
+  constructor(factory: () => T, ...plugins: ParserPlugin<T>[]) {
+    this.factory = factory;
+    this.plugins = plugins;
+  }
 
-  const plugins = [
-    titlePlugin,
-    wikilinkPlugin,
-    definitionsPlugin,
-    tagsPlugin,
-    aliasesPlugin,
-    sectionsPlugin,
-    propertiesPlugin,
-    ...extraPlugins,
-  ];
+  factory: () => T;
+  plugins: ParserPlugin<T>[];
 
-  const invokePluginHook = <
+  parse(uri: URI, markdown: string): T {
+    const parser = this.initParser();
+
+    Logger.debug('Parsing:', uri.toString());
+
+    this.invokePluginHook('onWillParseMarkdown', uri, markdown);
+    const tree = parser.parse(markdown);
+    const target: T = this.factory();
+    this.visitTree(uri, tree, target, markdown);
+
+    Logger.debug('Result:', target);
+    return target;
+  }
+
+  visitTree(uri: URI, tree, target: T, markdown: string) {
+    this.invokePluginHook('onWillVisitTree', uri, tree, target);
+
+    visit(tree, node => {
+      if (node.type === 'yaml') {
+        try {
+          this.parseProperties(node, uri, target);
+        } catch (e) {
+          Logger.warn(`Error while parsing YAML for [${uri.toString()}]`, e);
+        }
+
+        this.invokePluginHook('visit', uri, node, target, markdown);
+      }
+    });
+    this.invokePluginHook('onDidVisitTree', uri, tree, target);
+  }
+
+  parseProperties(node, uri: URI, target: T) {
+    const yamlProperties = parseYAML((node as any).value) ?? {};
+    this.invokePluginHook(
+      'onDidFindProperties',
+      uri,
+      yamlProperties,
+      target,
+      node
+    );
+  }
+
+  invokePluginHook<
     K extends {
       [P in keyof ParserPlugin<T>]: ParserPlugin<T>[P] extends (
         ...args: any[]
@@ -70,12 +100,8 @@ export function createMarkdownParser<T extends Resource>(
         ? P
         : never;
     }[keyof ParserPlugin<T>]
-  >(
-    hook: K,
-    uri: URI,
-    ...args: Parameters<NonNullable<ParserPlugin<T>[K]>>
-  ) => {
-    for (const plugin of plugins) {
+  >(hook: K, uri: URI, ...args: Parameters<NonNullable<ParserPlugin<T>[K]>>) {
+    for (const plugin of this.plugins) {
       try {
         (
           plugin[hook] as (
@@ -86,62 +112,41 @@ export function createMarkdownParser<T extends Resource>(
         handleError(plugin, hook as string, uri, e);
       }
     }
-  };
+  }
 
-  invokePluginHook('onDidInitializeParser', undefined, parser);
+  initParser() {
+    const parser = unified()
+      .use(markdownParse, { gfm: true })
+      .use(frontmatterPlugin, ['yaml'])
+      .use(wikiLinkPlugin, { aliasDivider: '|' });
 
-  const foamParser: ResourceParser<T> = {
-    parse: (uri: URI, markdown: string): T => {
-      Logger.debug('Parsing:', uri.toString());
+    this.invokePluginHook('onDidInitializeParser', undefined, parser);
+    return parser;
+  }
+}
 
-      invokePluginHook('onWillParseMarkdown', uri, markdown);
+export class CachedParser<T extends Resource> implements ResourceParser<T> {
+  constructor(cache: ParserCache<T>, parser: ResourceParser<T>) {
+    this.cache = cache;
+    this.parser = parser;
+  }
 
-      const tree = parser.parse(markdown);
-      const target: T = factory();
+  private cache: ParserCache<T>;
+  private parser: ResourceParser<T>;
 
-      invokePluginHook('onWillVisitTree', uri, tree, target);
-
-      visit(tree, node => {
-        if (node.type === 'yaml') {
-          try {
-            const yamlProperties = parseYAML((node as any).value) ?? {};
-            invokePluginHook(
-              'onDidFindProperties',
-              uri,
-              yamlProperties,
-              target,
-              node
-            );
-          } catch (e) {
-            Logger.warn(`Error while parsing YAML for [${uri.toString()}]`, e);
-          }
-        }
-
-        invokePluginHook('visit', uri, node, target, markdown);
-      });
-      invokePluginHook('onDidVisitTree', uri, tree, target);
-
-      Logger.debug('Result:', target);
-      return target;
-    },
-  };
-
-  const cachedParser: ResourceParser<T> = {
-    parse: (uri: URI, markdown: string): T => {
-      const actualChecksum = hash(markdown);
-      if (cache.has(uri)) {
-        const { checksum, target } = cache.get(uri);
-        if (actualChecksum === checksum) {
-          return target;
-        }
+  parse(uri: URI, markdown: string): T {
+    const actualChecksum = hash(markdown);
+    if (this.cache.has(uri)) {
+      const { checksum, target } = this.cache.get(uri);
+      if (actualChecksum === checksum) {
+        return target;
       }
-      const parsedTarget = foamParser.parse(uri, markdown);
-      cache.set(uri, { checksum: actualChecksum, target: parsedTarget });
-      return parsedTarget;
-    },
-  };
+    }
 
-  return isSome(cache) ? cachedParser : foamParser;
+    const parsedTarget = this.parser.parse(uri, markdown);
+    this.cache.set(uri, { checksum: actualChecksum, target: parsedTarget });
+    return parsedTarget;
+  }
 }
 
 /**
@@ -360,12 +365,18 @@ const propertiesPlugin: ParserPlugin<Resource> = {
   },
 };
 
-const typePlugin: ParserPlugin<{ type: undefined }> = {
+export const typePlugin: ParserPlugin<{ type: string }> = {
   name: 'type',
   onDidFindProperties: (properties, target, node: Node) => {
     if ('type' in properties) {
       target.type = properties.type;
     }
+    handleError(
+      typePlugin,
+      'onDidFindProperties',
+      undefined,
+      new Error('Couldn´t find property "type" in file')
+    );
   },
 };
 
