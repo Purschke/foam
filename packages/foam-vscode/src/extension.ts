@@ -4,7 +4,6 @@ import { workspace, ExtensionContext, window, commands } from 'vscode';
 import { MarkdownResourceProvider } from './core/services/markdown-provider';
 import { bootstrap } from './core/model/foam';
 import { Logger } from './core/utils/log';
-
 import { features } from './features';
 import { VsCodeOutputLogger, exposeLogger } from './services/logging';
 import {
@@ -14,9 +13,22 @@ import {
 } from './settings';
 import { AttachmentResourceProvider } from './core/services/attachment-provider';
 import { VsCodeWatcher } from './services/watcher';
-import { createMarkdownParser } from './core/services/markdown-parser';
 import VsCodeBasedParserCache from './services/cache';
 import { createMatcherAndDataStore } from './services/editor';
+import {
+  aliasesPlugin,
+  CachedParser,
+  definitionsPlugin,
+  FoamParser,
+  propertiesPlugin,
+  sectionsPlugin,
+  tagsPlugin,
+  titlePlugin,
+  wikilinkPlugin,
+} from './core/services/markdown-parser';
+import { Resource } from './core/model/note';
+import { URI } from './core/model/uri';
+import { FrontmatterMarkdownDirector } from './core/services/markdown-director';
 
 export async function activate(context: ExtensionContext) {
   const logger = new VsCodeOutputLogger();
@@ -46,8 +58,11 @@ export async function activate(context: ExtensionContext) {
     const watcher = new VsCodeWatcher(
       workspace.createFileSystemWatcher('**/*')
     );
-    const parserCache = new VsCodeBasedParserCache(context);
-    const parser = createMarkdownParser([], parserCache);
+
+    const resourceCache = new VsCodeBasedParserCache<Resource>(context);
+    const parser = new FrontmatterMarkdownDirector({
+      note: ResourceParser(resourceCache),
+    });
 
     const { notesExtensions, defaultExtension } = getNotesExtensions();
 
@@ -85,7 +100,7 @@ export async function activate(context: ExtensionContext) {
       markdownProvider,
       attachmentProvider,
       commands.registerCommand('foam-vscode.clear-cache', () =>
-        parserCache.clear()
+        resourceCache.clear()
       ),
       workspace.onDidChangeConfiguration(e => {
         if (
@@ -119,4 +134,33 @@ export async function activate(context: ExtensionContext) {
       `An error occurred while bootstrapping Foam. ${e.stack}`
     );
   }
+}
+
+function ResourceParser(parserCache: VsCodeBasedParserCache<Resource>) {
+  const factory = (uri: URI): Resource => {
+    return {
+      uri: uri,
+      type: 'note',
+      properties: {},
+      title: '',
+      definitions: [],
+      sections: null,
+      tags: null,
+      aliases: [],
+      links: [],
+    };
+  };
+
+  const resourceParser = new FoamParser<Resource>(
+    factory,
+    titlePlugin,
+    wikilinkPlugin,
+    definitionsPlugin,
+    tagsPlugin,
+    aliasesPlugin,
+    sectionsPlugin,
+    propertiesPlugin
+  );
+
+  return new CachedParser(parserCache, resourceParser);
 }

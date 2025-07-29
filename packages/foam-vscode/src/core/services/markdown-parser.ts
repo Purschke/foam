@@ -42,13 +42,13 @@ export interface ParserCacheEntry<T> {
 export type ParserCache<T> = ICache<URI, ParserCacheEntry<T>>;
 
 export class FoamParser<T> implements ResourceParser<T> {
-  constructor(factory: () => T, ...plugins: ParserPlugin<T>[]) {
+  constructor(factory: (uri: URI) => T, ...plugins: ParserPlugin<T>[]) {
     this.factory = factory;
     this.plugins = plugins;
   }
 
-  factory: () => T;
-  plugins: ParserPlugin<T>[];
+  private factory: (uri: URI) => T;
+  private plugins: ParserPlugin<T>[];
 
   parse(uri: URI, markdown: string): T {
     const parser = this.initParser();
@@ -57,14 +57,14 @@ export class FoamParser<T> implements ResourceParser<T> {
 
     this.invokePluginHook('onWillParseMarkdown', uri, markdown);
     const tree = parser.parse(markdown);
-    const target: T = this.factory();
+    const target: T = this.factory(uri);
     this.visitTree(uri, tree, target, markdown);
 
     Logger.debug('Result:', target);
     return target;
   }
 
-  visitTree(uri: URI, tree, target: T, markdown: string) {
+  private visitTree(uri: URI, tree, target: T, markdown: string) {
     this.invokePluginHook('onWillVisitTree', uri, tree, target);
 
     visit(tree, node => {
@@ -81,7 +81,7 @@ export class FoamParser<T> implements ResourceParser<T> {
     this.invokePluginHook('onDidVisitTree', uri, tree, target);
   }
 
-  parseProperties(node, uri: URI, target: T) {
+  private parseProperties(node, uri: URI, target: T) {
     const yamlProperties = parseYAML((node as any).value) ?? {};
     this.invokePluginHook(
       'onDidFindProperties',
@@ -92,7 +92,7 @@ export class FoamParser<T> implements ResourceParser<T> {
     );
   }
 
-  invokePluginHook<
+  private invokePluginHook<
     K extends {
       [P in keyof ParserPlugin<T>]: ParserPlugin<T>[P] extends (
         ...args: any[]
@@ -114,7 +114,7 @@ export class FoamParser<T> implements ResourceParser<T> {
     }
   }
 
-  initParser() {
+  private initParser() {
     const parser = unified()
       .use(markdownParse, { gfm: true })
       .use(frontmatterPlugin, ['yaml'])
@@ -125,7 +125,7 @@ export class FoamParser<T> implements ResourceParser<T> {
   }
 }
 
-export class CachedParser<T extends Resource> implements ResourceParser<T> {
+export class CachedParser<T> implements ResourceParser<T> {
   constructor(cache: ParserCache<T>, parser: ResourceParser<T>) {
     this.cache = cache;
     this.parser = parser;
@@ -165,7 +165,7 @@ const getTextFromChildren = (root: Node): string => {
   return text;
 };
 
-const tagsPlugin: ParserPlugin<Resource> = {
+export const tagsPlugin: ParserPlugin<Resource> = {
   name: 'tags',
   onDidFindProperties: (props, note, node) => {
     if (isSome(props.tags)) {
@@ -198,7 +198,7 @@ const tagsPlugin: ParserPlugin<Resource> = {
 };
 
 let sectionStack: Array<{ label: string; level: number; start: Position }> = [];
-const sectionsPlugin: ParserPlugin<Resource> = {
+export const sectionsPlugin: ParserPlugin<Resource> = {
   name: 'section',
   onWillVisitTree: () => {
     sectionStack = [];
@@ -247,7 +247,7 @@ const sectionsPlugin: ParserPlugin<Resource> = {
   },
 };
 
-const titlePlugin: ParserPlugin<Resource> = {
+export const titlePlugin: ParserPlugin<Resource> = {
   name: 'title',
   visit: (node, note) => {
     if (
@@ -270,7 +270,7 @@ const titlePlugin: ParserPlugin<Resource> = {
   },
 };
 
-const aliasesPlugin: ParserPlugin<Resource> = {
+export const aliasesPlugin: ParserPlugin<Resource> = {
   name: 'aliases',
   onDidFindProperties: (props, note, node) => {
     if (isSome(props.alias)) {
@@ -287,7 +287,7 @@ const aliasesPlugin: ParserPlugin<Resource> = {
   },
 };
 
-const wikilinkPlugin: ParserPlugin<Resource> = {
+export const wikilinkPlugin: ParserPlugin<Resource> = {
   name: 'wikilink',
   visit: (node, note, noteSource) => {
     if (node.type === 'wikiLink') {
@@ -337,7 +337,7 @@ const wikilinkPlugin: ParserPlugin<Resource> = {
   },
 };
 
-const definitionsPlugin: ParserPlugin<Resource> = {
+export const definitionsPlugin: ParserPlugin<Resource> = {
   name: 'definitions',
   visit: (node, note) => {
     if (node.type === 'definition') {
@@ -355,7 +355,7 @@ const definitionsPlugin: ParserPlugin<Resource> = {
   },
 };
 
-const propertiesPlugin: ParserPlugin<Resource> = {
+export const propertiesPlugin: ParserPlugin<Resource> = {
   name: 'properties',
   onDidFindProperties: (properties: any, note: Resource, node: Node) => {
     note.properties = {
