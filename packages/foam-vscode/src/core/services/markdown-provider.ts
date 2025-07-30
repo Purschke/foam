@@ -15,7 +15,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
 
   constructor(
     private readonly dataStore: IDataStore,
-    private readonly parser: MarkdownDirector,
+    private readonly parser: MarkdownDirector<Resource>,
     public readonly noteExtensions: string[] = ['.md']
   ) {}
 

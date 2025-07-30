@@ -1,8 +1,8 @@
-import { ResourceParser } from '../model/note';
+import { Resource, ResourceParser } from '../model/note';
 import { URI } from '../model/uri';
 import { FoamParser, typePlugin } from './markdown-parser';
 
-export abstract class MarkdownDirector {
+export abstract class MarkdownDirector<T> implements ResourceParser<T> {
   constructor(protected parserMap: Record<string, ResourceParser<any>>) {}
 
   /**
@@ -22,7 +22,7 @@ export abstract class MarkdownDirector {
     const parser = this.parserMap[type];
 
     if (!parser) {
-      throw new Error(`No parser for type '${type}'`);
+      throw new Error(`in file: ${uri}; No parser for type '${type}'`);
     }
     return parser.parse(uri, markdown);
   }
@@ -30,7 +30,7 @@ export abstract class MarkdownDirector {
   protected abstract resolveType(uri: URI, markdown: string): string;
 }
 
-export class FrontmatterMarkdownDirector extends MarkdownDirector {
+export class FrontmatterMarkdownDirector<T> extends MarkdownDirector<T> {
   protected resolveType(uri: URI, markdown: string): string {
     const parser = new FoamParser<{ type: string }>(
       () => ({ type: '' }),
