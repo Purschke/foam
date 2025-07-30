@@ -75,6 +75,7 @@ function resourceParser(extraPlugins: ParserPlugin<Resource>[]) {
     tagsPlugin,
     aliasesPlugin,
     sectionsPlugin,
+    propertiesPlugin,
     ...extraPlugins,
   ];
 
