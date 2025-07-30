@@ -62,8 +62,8 @@ function resourceParser(extraPlugins: ParserPlugin<Resource>[]) {
       properties: {},
       title: '',
       definitions: [],
-      sections: null,
-      tags: null,
+      sections: [],
+      tags: [],
       aliases: [],
       links: [],
     };
@@ -116,9 +116,8 @@ export class FoamParser<T> implements ResourceParser<T> {
         } catch (e) {
           Logger.warn(`Error while parsing YAML for [${uri.toString()}]`, e);
         }
-
-        this.invokePluginHook('visit', uri, node, target, markdown);
       }
+      this.invokePluginHook('visit', uri, node, target, markdown);
     });
     this.invokePluginHook('onDidVisitTree', uri, tree, target);
   }
