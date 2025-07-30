@@ -8,6 +8,7 @@ import { URI } from '../model/uri';
 import { Range } from '../model/range';
 import { getRandomURI } from '../../test/test-utils';
 import { Position } from '../model/position';
+import { Resource } from '../model/note';
 
 Logger.setLevel('error');
 
@@ -378,7 +379,7 @@ This is the content of section with url`);
   });
 
   describe('Parser plugins', () => {
-    const testPlugin: ParserPlugin = {
+    const testPlugin: ParserPlugin<Resource> = {
       visit: (node, note) => {
         if (node.type === 'heading') {
           note.properties.hasHeading = true;

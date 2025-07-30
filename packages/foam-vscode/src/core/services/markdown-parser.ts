@@ -13,6 +13,7 @@ import { extractHashtags, extractTagsFromProp, hash, isSome } from '../utils';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
 import { ICache } from '../utils/cache';
+import { FrontmatterMarkdownDirector } from './markdown-director';
 
 export interface ParserPlugin<T> {
   name?: string;
@@ -40,6 +41,46 @@ export interface ParserCacheEntry<T> {
  * If the URI and the Checksum have not changed, the cached resource is returned.
  */
 export type ParserCache<T> = ICache<URI, ParserCacheEntry<T>>;
+
+export function createMarkdownParser(
+  extraPlugins: ParserPlugin<Resource>[] = [],
+  cache?: ParserCache<Resource>
+): FrontmatterMarkdownDirector<Resource> {
+  const parser = resourceParser(extraPlugins);
+  const cacheParser = new CachedParser(cache, parser);
+
+  return isSome(cache)
+    ? new FrontmatterMarkdownDirector({ note: cacheParser })
+    : new FrontmatterMarkdownDirector({ note: parser });
+}
+
+function resourceParser(extraPlugins: ParserPlugin<Resource>[]) {
+  const factory = (uri: URI): Resource => {
+    return {
+      uri: uri,
+      type: 'note',
+      properties: {},
+      title: '',
+      definitions: [],
+      sections: null,
+      tags: null,
+      aliases: [],
+      links: [],
+    };
+  };
+  const plugins = [
+    titlePlugin,
+    wikilinkPlugin,
+    definitionsPlugin,
+    tagsPlugin,
+    aliasesPlugin,
+    sectionsPlugin,
+    ...extraPlugins,
+  ];
+
+  const resourceParser = new FoamParser<Resource>(factory, ...plugins);
+  return resourceParser;
+}
 
 export class FoamParser<T> implements ResourceParser<T> {
   constructor(factory: (uri: URI) => T, ...plugins: ParserPlugin<T>[]) {
