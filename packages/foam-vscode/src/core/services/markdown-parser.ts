@@ -14,7 +14,7 @@ import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
 import { ICache } from '../utils/cache';
 import { FrontmatterMarkdownDirector } from './markdown-director';
-import { TrainNote } from '../model/train-note';
+import { phases, TrainNote } from '../model/train-note';
 
 export interface ParserPlugin<T> {
   name?: string;
@@ -45,30 +45,45 @@ export type ParserCache<T> = ICache<URI, ParserCacheEntry<T>>;
 
 export function createMarkdownParser(
   extraPlugins: ParserPlugin<Resource>[] = [],
-  cache?: ParserCache<Resource>
+  resourceCache?: ParserCache<Resource>,
+  trainNoteCache?: ParserCache<TrainNote>
 ): FrontmatterMarkdownDirector<Resource> {
-  const parser = resourceParser(extraPlugins);
-  const cacheParser = new CachedParser(cache, parser);
+  const resourceParser = NoteParser(extraPlugins);
+  const trainnoteParser = TrainNoteParser();
 
-  return isSome(cache)
-    ? new FrontmatterMarkdownDirector({ note: cacheParser })
-    : new FrontmatterMarkdownDirector({ note: parser });
+  const parserMap: Record<string, ResourceParser<any>> = {};
+  isSome(resourceCache)
+    ? (parserMap['note'] = new CachedParser<Resource>(
+        resourceCache,
+        resourceParser
+      ))
+    : (parserMap['note'] = resourceParser);
+
+  isSome(trainNoteCache)
+    ? (parserMap['trainNote'] = new CachedParser<TrainNote>(
+        trainNoteCache,
+        trainnoteParser
+      ))
+    : (parserMap['trainNote'] = trainnoteParser);
+
+  return new FrontmatterMarkdownDirector(parserMap);
 }
 
-function resourceParser(extraPlugins: ParserPlugin<Resource>[]) {
-  const factory = (uri: URI): Resource => {
-    return {
-      uri: uri,
-      type: 'note',
-      properties: {},
-      title: '',
-      definitions: [],
-      sections: [],
-      tags: [],
-      aliases: [],
-      links: [],
-    };
+const resourceFactory = (uri: URI): Resource => {
+  return {
+    uri: uri,
+    type: 'note',
+    properties: {},
+    title: '',
+    definitions: [],
+    sections: [],
+    tags: [],
+    aliases: [],
+    links: [],
   };
+};
+
+function NoteParser(extraPlugins: ParserPlugin<Resource>[]) {
   const plugins = [
     titlePlugin,
     wikilinkPlugin,
@@ -80,8 +95,32 @@ function resourceParser(extraPlugins: ParserPlugin<Resource>[]) {
     ...extraPlugins,
   ];
 
-  const resourceParser = new FoamParser<Resource>(factory, ...plugins);
+  const resourceParser = new FoamParser<Resource>(resourceFactory, ...plugins);
   return resourceParser;
+}
+
+function TrainNoteParser() {
+  const plugins = [
+    titlePlugin,
+    wikilinkPlugin,
+    definitionsPlugin,
+    tagsPlugin,
+    aliasesPlugin,
+    sectionsPlugin,
+    propertiesPlugin,
+    PhasePlugin,
+    ReminderPlugin,
+  ];
+
+  const factory = (uri: URI): TrainNote => {
+    var trainNote = new TrainNote(phases);
+    var resource = resourceFactory(uri);
+    Object.assign(trainNote, resource);
+    return trainNote;
+  };
+
+  const trainNoteParser = new FoamParser<TrainNote>(factory, ...plugins);
+  return trainNoteParser;
 }
 
 export class FoamParser<T> implements ResourceParser<T> {

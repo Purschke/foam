@@ -2,6 +2,16 @@ import { Observer, Notifier } from '../utils/observer';
 import { Resource } from './note';
 import { Phase, Phases } from './phase';
 
+//https://www.phase-6.de/help/knowledge-base/phaseneinstellungen/
+export const phases = new Phases([
+  new Phase('Phase 1', 0),
+  new Phase('Phase 2', 1),
+  new Phase('Phase 3', 3),
+  new Phase('Phase 4', 9),
+  new Phase('Phase 5', 29),
+  new Phase('Phase 6', 90),
+]);
+
 export class TrainNote extends Resource {
   nextReminder: Date;
   phases: Phases;

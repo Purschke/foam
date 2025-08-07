@@ -18,6 +18,7 @@ import { createMarkdownParser } from './core/services/markdown-parser';
 import VsCodeBasedParserCache from './services/cache';
 import { createMatcherAndDataStore } from './services/editor';
 import { Resource } from './core/model/note';
+import { TrainNote } from './core/model/train-note';
 
 export async function activate(context: ExtensionContext) {
   const logger = new VsCodeOutputLogger();
@@ -47,8 +48,9 @@ export async function activate(context: ExtensionContext) {
     const watcher = new VsCodeWatcher(
       workspace.createFileSystemWatcher('**/*')
     );
-    const parserCache = new VsCodeBasedParserCache<Resource>(context);
-    const parser = createMarkdownParser([], parserCache);
+    const resourceCache = new VsCodeBasedParserCache<Resource>(context);
+    const trainNoteCache = new VsCodeBasedParserCache<TrainNote>(context);
+    const parser = createMarkdownParser([], resourceCache, trainNoteCache);
 
     const { notesExtensions, defaultExtension } = getNotesExtensions();
 
@@ -85,9 +87,10 @@ export async function activate(context: ExtensionContext) {
       watcher,
       markdownProvider,
       attachmentProvider,
-      commands.registerCommand('foam-vscode.clear-cache', () =>
-        parserCache.clear()
-      ),
+      commands.registerCommand('foam-vscode.clear-cache', () => {
+        resourceCache.clear();
+        trainNoteCache.clear();
+      }),
       workspace.onDidChangeConfiguration(e => {
         if (
           [
