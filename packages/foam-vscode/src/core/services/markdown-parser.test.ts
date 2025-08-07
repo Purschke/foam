@@ -9,6 +9,7 @@ import { Range } from '../model/range';
 import { getRandomURI } from '../../test/test-utils';
 import { Position } from '../model/position';
 import { Resource } from '../model/note';
+import { TrainNote } from '../model/train-note';
 
 Logger.setLevel('error');
 
@@ -463,6 +464,41 @@ But with some content.
         title: 'alias3',
       },
     ]);
+  });
+
+  describe('TrainNote Parsing', () => {
+    it('Phase', () => {
+      const trainNote = parser.parse(
+        URI.file('/path/to/a'),
+        `
+---
+type: trainNote
+phase: 3
+---
+This is a test note without headings.
+But with some content.
+`
+      ) as TrainNote;
+
+      expect(trainNote.currentPhase).toBe(3);
+    });
+    it('nextReminder', () => {
+      const trainNote = parser.parse(
+        URI.file('/path/to/a'),
+        `
+---
+type: trainNote
+nextReminder: 2025-09-06
+---
+This is a test note without headings.
+But with some content.
+`
+      ) as TrainNote;
+
+      expect(trainNote.nextReminder.getTime()).toBe(
+        new Date('2025-09-06').getTime()
+      );
+    });
   });
 });
 

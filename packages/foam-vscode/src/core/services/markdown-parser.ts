@@ -461,7 +461,7 @@ export const PhasePlugin: ParserPlugin<TrainNote> = {
   name: 'phase',
   onDidFindProperties: (properties, target, node: Node) => {
     if ('phase' in properties) {
-      target.phases = properties.phase;
+      target.currentPhase = properties.phase;
     }
   },
 };
@@ -470,7 +470,7 @@ export const ReminderPlugin: ParserPlugin<TrainNote> = {
   name: 'reminder',
   onDidFindProperties: (properties, target, node: Node) => {
     if ('nextReminder' in properties) {
-      target.nextReminder = properties.nextReminder;
+      target.nextReminder = new Date(properties.nextReminder);
     }
   },
 };
