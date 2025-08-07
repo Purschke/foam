@@ -418,6 +418,24 @@ export const typePlugin: ParserPlugin<{ type: string }> = {
   },
 };
 
+export const PhasePlugin: ParserPlugin<TrainNote> = {
+  name: 'phase',
+  onDidFindProperties: (properties, target, node: Node) => {
+    if ('phase' in properties) {
+      target.phases = properties.phase;
+    }
+  },
+};
+
+export const ReminderPlugin: ParserPlugin<TrainNote> = {
+  name: 'reminder',
+  onDidFindProperties: (properties, target, node: Node) => {
+    if ('nextReminder' in properties) {
+      target.nextReminder = properties.nextReminder;
+    }
+  },
+};
+
 const handleError = <T>(
   plugin: ParserPlugin<T>,
   fnName: string,
