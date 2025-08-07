@@ -14,6 +14,7 @@ import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
 import { ICache } from '../utils/cache';
 import { FrontmatterMarkdownDirector } from './markdown-director';
+import { TrainNote } from '../model/train-note';
 
 export interface ParserPlugin<T> {
   name?: string;
@@ -411,13 +412,9 @@ export const typePlugin: ParserPlugin<{ type: string }> = {
   onDidFindProperties: (properties, target, node: Node) => {
     if ('type' in properties) {
       target.type = properties.type;
+    } else {
+      console.log('Couldn´t find property "type" in file');
     }
-    handleError(
-      typePlugin,
-      'onDidFindProperties',
-      undefined,
-      new Error('Couldn´t find property "type" in file')
-    );
   },
 };
 
