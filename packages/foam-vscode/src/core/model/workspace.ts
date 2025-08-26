@@ -7,11 +7,19 @@ import { ResourceProvider } from './provider';
 import { IDisposable } from '../common/lifecycle';
 import { IDataStore } from '../services/datastore';
 import TrieMap from 'mnemonist/trie-map';
+import { TrainNoteService } from './train-noteService';
 
 export class FoamWorkspace implements IDisposable {
-  private onDidAddEmitter = new Emitter<Resource>();
-  private onDidUpdateEmitter = new Emitter<{ old: Resource; new: Resource }>();
-  private onDidDeleteEmitter = new Emitter<Resource>();
+  private onDidAddEmitter = new Emitter<{ id: string; resource: Resource }>();
+  private onDidUpdateEmitter = new Emitter<{
+    id: string;
+    old: Resource;
+    new: Resource;
+  }>();
+  private onDidDeleteEmitter = new Emitter<{
+    id: string;
+    resource: Resource;
+  }>();
   onDidAdd = this.onDidAddEmitter.event;
   onDidUpdate = this.onDidUpdateEmitter.event;
   onDidDelete = this.onDidDeleteEmitter.event;
@@ -38,26 +46,24 @@ export class FoamWorkspace implements IDisposable {
 
   set(resource: Resource) {
     const old = this.find(resource.uri);
+    const id = this.getTrieIdentifier().get(resource.uri.path);
 
     // store resource
-    this._resources.set(
-      this.getTrieIdentifier().get(resource.uri.path),
-      resource
-    );
+    this._resources.set(id, resource);
 
     isSome(old)
-      ? this.onDidUpdateEmitter.fire({ old: old, new: resource })
-      : this.onDidAddEmitter.fire(resource);
+      ? this.onDidUpdateEmitter.fire({ id: id, old: old, new: resource })
+      : this.onDidAddEmitter.fire({ id: id, resource: resource });
     return this;
   }
 
   delete(uri: URI) {
-    const trieIdentifier = this.getTrieIdentifier();
-    const targetId = trieIdentifier.get(uri);
+    const targetId = this.getTrieIdentifier().get(uri);
     const deleted = this._resources.get(targetId);
     this._resources.delete(targetId);
 
-    isSome(deleted) && this.onDidDeleteEmitter.fire(deleted);
+    isSome(deleted) &&
+      this.onDidDeleteEmitter.fire({ id: targetId, resource: deleted });
     return deleted ?? null;
   }
 
