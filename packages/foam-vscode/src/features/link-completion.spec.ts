@@ -159,7 +159,7 @@ describe('Link Completion', () => {
         );
 
         expect(links.items.map(i => i.label)).toEqual([
-          workspace.getIdentifier(noteUri),
+          workspace.getTrieIdentifier().getIdentifier(noteUri),
         ]);
       }
     );
@@ -187,7 +187,7 @@ describe('Link Completion', () => {
         );
 
         expect(links.items.map(i => i.insertText)).toEqual([
-          workspace.getIdentifier(noteUri),
+          workspace.getTrieIdentifier().getIdentifier(noteUri),
         ]);
       }
     );
@@ -202,7 +202,7 @@ describe('Link Completion', () => {
         );
 
         expect(links.items.map(i => i.insertText)).toEqual([
-          `${workspace.getIdentifier(noteUri)}|My Note Title`,
+          `${workspace.getTrieIdentifier().getIdentifier(noteUri)}|My Note Title`,
         ]);
       }
     );

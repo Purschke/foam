@@ -33,7 +33,7 @@ export default async function activate(
           const { target } = MarkdownLink.analyzeLink(connection.link);
           switch (connection.link.type) {
             case 'wikilink': {
-              const identifier = foam.workspace.getIdentifier(
+              const identifier = foam.workspace.getTrieIdentifier().getIdentifier(
                 fromVsCodeUri(newUri),
                 [fromVsCodeUri(oldUri)]
               );
