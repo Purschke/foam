@@ -7,21 +7,25 @@ import { FoamWorkspace, TrieIdentifier } from './workspace';
 export class TrainNoteService implements IDisposable {
   private constructor() {}
 
-  private _resources: TrieMap<string, TrainNote> = new TrieMap();
+  private _trainnotes: TrieMap<string, TrainNote> = new TrieMap();
   private disposables: IDisposable[] = [];
 
-  public Set(id: string, resource: Resource) {
+  private set(id: string, resource: Resource) {
     const isTrainNote = this.IsTrainNote(resource);
     if (!isTrainNote.result) return;
 
-    this._resources.set(id, isTrainNote.value);
+    this._trainnotes.set(id, isTrainNote.value);
   }
 
-  public Delete(id: string, resource: Resource) {
+  private delete(id: string, resource: Resource) {
     const isTrainNote = this.IsTrainNote(resource);
     if (!isTrainNote.result) return;
 
-    this._resources.delete(id);
+    this._trainnotes.delete(id);
+  }
+
+  public list(): Resource[] {
+    return Array.from(this._trainnotes.values());
   }
 
   private IsTrainNote(resource: Resource): {
@@ -45,13 +49,13 @@ export class TrainNoteService implements IDisposable {
     workspace
       .list()
       .forEach(res =>
-        service.Set(new TrieIdentifier(service._resources).get(res.uri), res)
+        service.set(new TrieIdentifier(service._trainnotes).get(res.uri), res)
       );
 
     service.disposables.push(
-      workspace.onDidAdd(service.Set.bind(service)),
-      workspace.onDidUpdate(e => service.Set(e.id, e.new)),
-      workspace.onDidDelete(service.Delete.bind(service))
+      workspace.onDidAdd(service.set.bind(service)),
+      workspace.onDidUpdate(e => service.set(e.id, e.new)),
+      workspace.onDidDelete(service.delete.bind(service))
     );
 
     return service;
