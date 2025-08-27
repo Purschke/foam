@@ -53,9 +53,9 @@ export class TrainNoteService implements IDisposable {
       );
 
     service.disposables.push(
-      workspace.onDidAdd(service.set.bind(service)),
+      workspace.onDidAdd(e => service.set(e.id, e.resource)),
       workspace.onDidUpdate(e => service.set(e.id, e.new)),
-      workspace.onDidDelete(service.delete.bind(service))
+      workspace.onDidDelete(e => service.delete(e.id, e.resource))
     );
 
     return service;
