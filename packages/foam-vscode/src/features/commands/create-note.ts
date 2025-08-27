@@ -126,7 +126,9 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
       );
 
   if (args.sourceLink) {
-    const identifier = foam.workspace.getTrieIdentifier().getIdentifier(createdNote.uri);
+    const identifier = foam.workspace
+      .getTrieIdentifier()
+      .getIdentifier(createdNote.uri);
     const edit = MarkdownLink.createUpdateLinkEdit(args.sourceLink.data, {
       target: identifier,
     });
