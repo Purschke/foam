@@ -202,7 +202,9 @@ describe('Link Completion', () => {
         );
 
         expect(links.items.map(i => i.insertText)).toEqual([
-          `${workspace.getTrieIdentifier().getIdentifier(noteUri)}|My Note Title`,
+          `${workspace
+            .getTrieIdentifier()
+            .getIdentifier(noteUri)}|My Note Title`,
         ]);
       }
     );

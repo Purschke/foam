@@ -183,7 +183,9 @@ export class WikilinkCompletionProvider
       const resourceIsDocument =
         ['attachment', 'image'].indexOf(resource.type) === -1;
 
-      const identifier = this.ws.getTrieIdentifier().getIdentifier(resource.uri);
+      const identifier = this.ws
+        .getTrieIdentifier()
+        .getIdentifier(resource.uri);
 
       const label = !resourceIsDocument
         ? identifier
@@ -224,7 +226,10 @@ export class WikilinkCompletionProvider
           vscode.CompletionItemKind.Reference,
           resource.uri
         );
-        item.insertText = this.ws.getTrieIdentifier().getIdentifier(resource.uri) + '|' + a.title;
+        item.insertText =
+          this.ws.getTrieIdentifier().getIdentifier(resource.uri) +
+          '|' +
+          a.title;
         item.detail = `Alias of ${vscode.workspace.asRelativePath(
           toVsCodeUri(resource.uri)
         )}`;
