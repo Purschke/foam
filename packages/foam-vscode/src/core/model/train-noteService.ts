@@ -2,7 +2,7 @@ import TrieMap from 'mnemonist/trie-map';
 import { IDisposable } from '../common/lifecycle';
 import { Resource } from './note';
 import { TrainNote } from './train-note';
-import { FoamWorkspace } from './workspace';
+import { FoamWorkspace, TrieIdentifier } from './workspace';
 
 export class TrainNoteService implements IDisposable {
   private constructor() {}
@@ -42,6 +42,12 @@ export class TrainNoteService implements IDisposable {
 
   public static fromWorkspace(workspace: FoamWorkspace): TrainNoteService {
     const service = new TrainNoteService();
+    workspace
+      .list()
+      .forEach(res =>
+        service.Set(new TrieIdentifier(service._resources).get(res.uri), res)
+      );
+
     service.disposables.push(
       workspace.onDidAdd(service.Set.bind(service)),
       workspace.onDidUpdate(e => service.Set(e.id, e.new)),
