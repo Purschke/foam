@@ -35,6 +35,13 @@ describe('Increase Phase', () => {
     stepper.increase(note);
     expect(note.currentPhase).toBe(note.phases.Last());
   });
+
+  it('undifiend increase', () => {
+    var target = new TrainNote(phases);
+    expect(target.currentPhase).toBeUndefined();
+    stepper.increase(target);
+    expect(target.currentPhase).toBe(note.phases.First());
+  });
 });
 
 describe('Decrease Phase', () => {
@@ -59,6 +66,13 @@ describe('Decrease Phase', () => {
 
     stepper.decrease(note);
     expect(note.currentPhase).toBe(note.phases.First());
+  });
+
+  it('undifiend decrease', () => {
+    var target = new TrainNote(phases);
+    expect(target.currentPhase).toBeUndefined();
+    stepper.decrease(target);
+    expect(target.currentPhase).toBe(note.phases.First());
   });
 });
 

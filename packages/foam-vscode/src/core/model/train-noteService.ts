@@ -48,7 +48,7 @@ export class TrainNoteService implements IDisposable {
       const stepper = new TrainNoteStepper(
         new WriteObserver(new FrontmatterWriter())
       );
-      stepper.setPhase(trainnote, trainnote.phases.First());
+      stepper.increase(trainnote);
     }
   }
 
