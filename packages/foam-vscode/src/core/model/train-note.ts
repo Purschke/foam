@@ -29,19 +29,19 @@ export class TrainNoteStepper extends Notifier {
     this.Attach(observer);
   }
 
-  Increase(trainnote: TrainNote) {
+  increase(trainnote: TrainNote) {
     var newPhase = trainnote.phases.Next(trainnote.currentPhase);
-    this.SetPhase(trainnote, newPhase);
+    this.setPhase(trainnote, newPhase);
     this.Notify();
   }
 
-  Decrease(trainnote: TrainNote) {
+  decrease(trainnote: TrainNote) {
     var newPhase = trainnote.phases.Return(trainnote.currentPhase);
-    this.SetPhase(trainnote, newPhase);
+    this.setPhase(trainnote, newPhase);
     this.Notify();
   }
 
-  SetPhase(trainnote: TrainNote, phase: Phase, from: Date = new Date()) {
+  setPhase(trainnote: TrainNote, phase: Phase, from: Date = new Date()) {
     trainnote.nextReminder = from;
     trainnote.nextReminder.setDate(
       trainnote.nextReminder.getDate() + phase.days
