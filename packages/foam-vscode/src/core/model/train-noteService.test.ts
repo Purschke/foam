@@ -64,3 +64,16 @@ describe('Synced trie', () => {
     ).toEqual(['/page-c.md']);
   });
 });
+
+describe('validate Trainnote', () => {
+  it('validation Check', () => {
+    const ws = createTestWorkspace();
+    const ts = TrainNoteService.fromWorkspace(ws);
+
+    const trainNote = createTestTrainNote({ uri: '/page-a.md' });
+    expect(trainNote.currentPhase).toBeUndefined();
+
+    ws.set(trainNote);
+    expect(ts.list()[0].currentPhase.name).toBe('Phase 1');
+  });
+});

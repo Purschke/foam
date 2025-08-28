@@ -1,8 +1,11 @@
 import TrieMap from 'mnemonist/trie-map';
 import { IDisposable } from '../common/lifecycle';
 import { Resource } from './note';
-import { TrainNote } from './train-note';
+import { TrainNote, TrainNoteStepper } from './train-note';
 import { FoamWorkspace, TrieIdentifier } from './workspace';
+import { TrainNoteWriter } from '../services/Writer/train-note-writer';
+import { FrontmatterWriter } from '../../services/frontmatter-writer';
+import { WriteObserver } from '../utils/observer';
 
 export class TrainNoteService implements IDisposable {
   private constructor() {}
@@ -14,6 +17,7 @@ export class TrainNoteService implements IDisposable {
     const isTrainNote = this.IsTrainNote(resource);
     if (!isTrainNote.result) return;
 
+    this.validateTrainNote(isTrainNote.value);
     this._trainnotes.set(id, isTrainNote.value);
   }
 
@@ -24,7 +28,7 @@ export class TrainNoteService implements IDisposable {
     this._trainnotes.delete(id);
   }
 
-  public list(): Resource[] {
+  public list(): TrainNote[] {
     return Array.from(this._trainnotes.values());
   }
 
@@ -37,6 +41,15 @@ export class TrainNoteService implements IDisposable {
     }
 
     return { result: false, value: null };
+  }
+
+  private validateTrainNote(trainnote: TrainNote) {
+    if (trainnote.currentPhase === undefined) {
+      const stepper = new TrainNoteStepper(
+        new WriteObserver(new FrontmatterWriter())
+      );
+      stepper.SetPhase(trainnote, trainnote.phases.First());
+    }
   }
 
   dispose(): void {
