@@ -21,13 +21,12 @@ describe('VS-Code document Save', () => {
     stepper.setPhase(note, note.phases.First());
 
     var stringnextReminder = note.nextReminder.toISOString().split('T')[0];
-    await new FrontmatterWriter().write(
-      {
-        currentPhase: note.currentPhase,
-        nextReminder: stringnextReminder,
-      },
-      note.uri
-    );
+    const target = {
+      uri: note.uri,
+      currentPhase: note.currentPhase,
+      nextReminder: stringnextReminder,
+    };
+    await new FrontmatterWriter().write(target);
 
     var file = await readFile(note.uri);
     var frontmatter = matter(file);

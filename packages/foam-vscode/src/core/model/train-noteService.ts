@@ -46,7 +46,7 @@ export class TrainNoteService implements IDisposable {
   private validateTrainNote(trainnote: TrainNote) {
     if (trainnote.currentPhase === undefined) {
       const stepper = new TrainNoteStepper(
-        new WriteObserver(new FrontmatterWriter())
+        new WriteObserver(new TrainNoteWriter(new FrontmatterWriter()))
       );
       stepper.increase(trainnote);
     }

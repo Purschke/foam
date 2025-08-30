@@ -60,11 +60,11 @@ export function createMarkdownParser(
     : (parserMap['note'] = resourceParser);
 
   isSome(trainNoteCache)
-    ? (parserMap['trainNote'] = new CachedParser<TrainNote>(
+    ? (parserMap['training-note'] = new CachedParser<TrainNote>(
         trainNoteCache,
         trainnoteParser
       ))
-    : (parserMap['trainNote'] = trainnoteParser);
+    : (parserMap['training-note'] = trainnoteParser);
 
   return new FrontmatterMarkdownDirector(parserMap);
 }

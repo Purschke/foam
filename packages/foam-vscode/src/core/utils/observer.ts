@@ -13,7 +13,7 @@ export class WriteObserver implements Observer {
   }
 
   update(object: { uri: URI }): void {
-    this.writer.write(object, object.uri);
+    this.writer.write(object);
   }
 }
 
@@ -28,7 +28,7 @@ export class Notifier {
     this.observer = null;
   }
 
-  Notify() {
-    this.observer.update(this);
+  Notify(object: { uri: URI }) {
+    this.observer.update(object);
   }
 }
