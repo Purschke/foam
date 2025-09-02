@@ -1,4 +1,4 @@
-import { Resource, ResourceParser } from '../model/note';
+import { ResourceParser } from '../model/note';
 import { URI } from '../model/uri';
 import { FoamParser, typePlugin } from './markdown-parser';
 

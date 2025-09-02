@@ -15,6 +15,7 @@ import { URI } from '../model/uri';
 import { ICache } from '../utils/cache';
 import { FrontmatterMarkdownDirector } from './markdown-director';
 import { phases, TrainNote } from '../model/train-note';
+import { Phase } from '../model/phase';
 
 export interface ParserPlugin<T> {
   name?: string;
@@ -460,8 +461,8 @@ export const typePlugin: ParserPlugin<{ type: string }> = {
 export const PhasePlugin: ParserPlugin<TrainNote> = {
   name: 'phase',
   onDidFindProperties: (properties, target, node: Node) => {
-    if ('phase' in properties) {
-      target.currentPhase = properties.phase;
+    if ('currentPhase' in properties) {
+      target.currentPhase = properties.currentPhase as Phase;
     }
   },
 };
