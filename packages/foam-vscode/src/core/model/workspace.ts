@@ -30,6 +30,7 @@ export class FoamWorkspace implements IDisposable {
    * Resources by path
    */
   private _resources: TrieMap<string, Resource> = new TrieMap();
+  public _trainNoteService = TrainNoteService.fromWorkspace(this);
 
   /**
    * @param defaultExtension: The default extension for notes in this workspace (e.g. `.md`)
