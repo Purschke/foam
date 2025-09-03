@@ -10,6 +10,7 @@ import { getRandomURI } from '../../test/test-utils';
 import { Position } from '../model/position';
 import { Resource } from '../model/note';
 import { TrainNote } from '../model/train-note';
+import { Phase } from '../model/phase';
 
 Logger.setLevel('error');
 
@@ -472,22 +473,24 @@ But with some content.
         URI.file('/path/to/a'),
         `
 ---
-type: trainNote
-phase: 3
+type: training-note
+currentPhase:
+  name: Phase 1
+  days: 0
 ---
 This is a test note without headings.
 But with some content.
 `
       ) as TrainNote;
 
-      expect(trainNote.currentPhase).toBe(3);
+      expect(trainNote.currentPhase).toEqual(new Phase('Phase 1', 0));
     });
     it('nextReminder', () => {
       const trainNote = parser.parse(
         URI.file('/path/to/a'),
         `
 ---
-type: trainNote
+type: training-note
 nextReminder: 2025-09-06
 ---
 This is a test note without headings.

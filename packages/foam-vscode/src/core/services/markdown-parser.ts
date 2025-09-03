@@ -453,7 +453,7 @@ export const typePlugin: ParserPlugin<{ type: string }> = {
     if ('type' in properties) {
       target.type = properties.type;
     } else {
-      console.log('Couldn´t find property "type" in file');
+      target.type = 'note';
     }
   },
 };
