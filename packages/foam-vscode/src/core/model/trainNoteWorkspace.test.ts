@@ -79,11 +79,29 @@ describe('time filter', () => {
     expect(TrainNoteWorkspace.isToday(today)).toBeTruthy();
   });
 
+  it('late', () => {
+    const today = new Date();
+    const tomorrow = new Date();
+    const yesterday = new Date();
+    const lastYear = new Date();
+
+    tomorrow.setDate(today.getDate() + 1);
+    yesterday.setDate(today.getDate() - 1);
+    lastYear.setDate(today.getDate() - 360);
+
+    expect(TrainNoteWorkspace.isLate(tomorrow)).toBeFalsy();
+    expect(TrainNoteWorkspace.isLate(yesterday)).toBeTruthy();
+    expect(TrainNoteWorkspace.isLate(today)).toBeFalsy();
+    expect(TrainNoteWorkspace.isLate(lastYear)).toBeTruthy();
+  });
+
   it('Trainotes for today', () => {
     const ws = createTestWorkspace();
 
     const tomorrow = new Date();
+    const yesterday = new Date();
     tomorrow.setDate(new Date().getDate() + 2);
+    yesterday.setDate(new Date().getDate() - 1);
 
     ws.set(
       createTestTrainNote({
@@ -102,7 +120,7 @@ describe('time filter', () => {
     ws.set(
       createTestTrainNote({
         uri: '/page-c.md',
-        nextReminder: tomorrow,
+        nextReminder: yesterday,
         currentPhase: new Phase('Test', 2),
       })
     );
@@ -113,5 +131,44 @@ describe('time filter', () => {
         .map(n => n.uri.path)
         .sort()
     ).toEqual(['/page-b.md']);
+  });
+
+  it('late Trainotes', () => {
+    const today = new Date();
+    const tomorrow = new Date();
+    const lastYear = new Date();
+    const ws = createTestWorkspace();
+
+    tomorrow.setDate(today.getDate() + 1);
+    lastYear.setDate(today.getDate() - 360);
+
+    ws.set(
+      createTestTrainNote({
+        uri: '/page-a.md',
+        nextReminder: tomorrow,
+        currentPhase: new Phase('Test', 2),
+      })
+    );
+    ws.set(
+      createTestTrainNote({
+        uri: '/page-b.md',
+        nextReminder: today,
+        currentPhase: new Phase('Test', 2),
+      })
+    );
+    ws.set(
+      createTestTrainNote({
+        uri: '/page-c.md',
+        nextReminder: lastYear,
+        currentPhase: new Phase('Test', 2),
+      })
+    );
+
+    expect(
+      ws.trainNoteWorkspace
+        .late()
+        .map(n => n.uri.path)
+        .sort()
+    ).toEqual(['/page-c.md']);
   });
 });

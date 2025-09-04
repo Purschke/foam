@@ -32,15 +32,16 @@ export class TrainNoteWorkspace implements IDisposable {
     return Array.from(this._trainnotes.values());
   }
 
-  public today(): TrainNote[] {
-    const result = [];
+  public today() {
+    return this.list().filter(note =>
+      TrainNoteWorkspace.isToday(note.nextReminder)
+    );
+  }
 
-    for (let trainnote of this.list()) {
-      if (TrainNoteWorkspace.isToday(trainnote.nextReminder)) {
-        result.push(trainnote);
-      }
-    }
-    return result;
+  public late() {
+    return this.list().filter(note =>
+      TrainNoteWorkspace.isLate(note.nextReminder)
+    );
   }
 
   private IsTrainNote(resource: Resource): {
@@ -92,5 +93,13 @@ export class TrainNoteWorkspace implements IDisposable {
       date.getMonth() === today.getMonth() &&
       date.getDate() === today.getDate()
     );
+  }
+
+  static isLate(date: Date): boolean {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    date.setHours(0, 0, 0, 0);
+
+    return date.getTime() < today.getTime();
   }
 }
