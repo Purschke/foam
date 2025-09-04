@@ -3,21 +3,19 @@ import {
   createTestTrainNote,
   createTestWorkspace,
 } from '../../test/test-utils';
-import { TrainNoteService } from './train-noteService';
+import { Phase } from './phase';
+import { TrainNoteWorkspace } from './trainNoteWorkspace';
 import { URI } from './uri';
 
 describe('Synced trie', () => {
   it('Added', () => {
     const ws = createTestWorkspace();
     ws.set(createTestTrainNote({ uri: '/page-a.md' }));
-
-    const ts = TrainNoteService.fromWorkspace(ws);
-
     ws.set(createTestTrainNote({ uri: '/page-c.md' }));
     ws.set(createTestNote({ uri: '/page-b.md' }));
 
     expect(
-      ts
+      ws.trainNoteWorkspace
         .list()
         .map(n => n.uri.path)
         .sort()
@@ -27,16 +25,13 @@ describe('Synced trie', () => {
   it('Updated', () => {
     const ws = createTestWorkspace();
     ws.set(createTestTrainNote({ uri: '/page-a.md', title: 'foo' }));
-
-    const ts = TrainNoteService.fromWorkspace(ws);
-
     ws.set(createTestTrainNote({ uri: '/page-c.md', title: 'bar' }));
     ws.set(createTestNote({ uri: '/page-b.md', title: 'Fred' }));
 
     ws.set(createTestTrainNote({ uri: '/page-c.md', title: 'Mani' }));
 
     expect(
-      ts
+      ws.trainNoteWorkspace
         .list()
         .map(n => ({ path: n.uri.path, title: n.title }))
         .sort((a, b) => a.path.localeCompare(b.path))
@@ -50,14 +45,12 @@ describe('Synced trie', () => {
     const ws = createTestWorkspace();
     ws.set(createTestTrainNote({ uri: '/page-a.md' }));
 
-    const ts = TrainNoteService.fromWorkspace(ws);
-
     ws.set(createTestTrainNote({ uri: '/page-c.md' }));
     ws.set(createTestNote({ uri: '/page-b.md' }));
     ws.delete(URI.parse('/page-a.md'));
 
     expect(
-      ts
+      ws.trainNoteWorkspace
         .list()
         .map(n => n.uri.path)
         .sort()
@@ -68,12 +61,57 @@ describe('Synced trie', () => {
 describe('validate Trainnote', () => {
   it('validation Check', () => {
     const ws = createTestWorkspace();
-    const ts = TrainNoteService.fromWorkspace(ws);
-
     const trainNote = createTestTrainNote({ uri: '/page-a.md' });
     expect(trainNote.currentPhase).toBeUndefined();
 
     ws.set(trainNote);
-    expect(ts.list()[0].currentPhase.name).toBe('Phase 1');
+    expect(ws.trainNoteWorkspace.list()[0].currentPhase.name).toBe('Phase 1');
+  });
+});
+
+describe('time filter', () => {
+  it('today', () => {
+    const today = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate() + 1);
+
+    expect(TrainNoteWorkspace.isToday(tomorrow)).toBeFalsy();
+    expect(TrainNoteWorkspace.isToday(today)).toBeTruthy();
+  });
+
+  it('Trainotes for today', () => {
+    const ws = createTestWorkspace();
+
+    const tomorrow = new Date();
+    tomorrow.setDate(new Date().getDate() + 2);
+
+    ws.set(
+      createTestTrainNote({
+        uri: '/page-a.md',
+        nextReminder: tomorrow,
+        currentPhase: new Phase('Test', 2),
+      })
+    );
+    ws.set(
+      createTestTrainNote({
+        uri: '/page-b.md',
+        nextReminder: new Date(),
+        currentPhase: new Phase('Test', 2),
+      })
+    );
+    ws.set(
+      createTestTrainNote({
+        uri: '/page-c.md',
+        nextReminder: tomorrow,
+        currentPhase: new Phase('Test', 2),
+      })
+    );
+
+    expect(
+      ws.trainNoteWorkspace
+        .today()
+        .map(n => n.uri.path)
+        .sort()
+    ).toEqual(['/page-b.md']);
   });
 });

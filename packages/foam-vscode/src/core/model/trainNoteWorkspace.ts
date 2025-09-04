@@ -7,7 +7,7 @@ import { TrainNoteWriter } from '../services/Writer/train-note-writer';
 import { FrontmatterWriter } from '../../services/frontmatter-writer';
 import { WriteObserver } from '../utils/observer';
 
-export class TrainNoteService implements IDisposable {
+export class TrainNoteWorkspace implements IDisposable {
   private constructor() {}
 
   private _trainnotes: TrieMap<string, TrainNote> = new TrieMap();
@@ -30,6 +30,17 @@ export class TrainNoteService implements IDisposable {
 
   public list(): TrainNote[] {
     return Array.from(this._trainnotes.values());
+  }
+
+  public today(): TrainNote[] {
+    const result = [];
+
+    for (let trainnote of this.list()) {
+      if (TrainNoteWorkspace.isToday(trainnote.nextReminder)) {
+        result.push(trainnote);
+      }
+    }
+    return result;
   }
 
   private IsTrainNote(resource: Resource): {
@@ -57,8 +68,8 @@ export class TrainNoteService implements IDisposable {
     this.disposables = [];
   }
 
-  public static fromWorkspace(workspace: FoamWorkspace): TrainNoteService {
-    const service = new TrainNoteService();
+  public static fromWorkspace(workspace: FoamWorkspace): TrainNoteWorkspace {
+    const service = new TrainNoteWorkspace();
     workspace
       .list()
       .forEach(res =>
@@ -72,5 +83,14 @@ export class TrainNoteService implements IDisposable {
     );
 
     return service;
+  }
+
+  static isToday(date: Date): boolean {
+    const today = new Date();
+    return (
+      date.getFullYear() === today.getFullYear() &&
+      date.getMonth() === today.getMonth() &&
+      date.getDate() === today.getDate()
+    );
   }
 }

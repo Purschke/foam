@@ -7,7 +7,7 @@ import { ResourceProvider } from './provider';
 import { IDisposable } from '../common/lifecycle';
 import { IDataStore } from '../services/datastore';
 import TrieMap from 'mnemonist/trie-map';
-import { TrainNoteService } from './train-noteService';
+import { TrainNoteWorkspace } from './trainNoteWorkspace';
 
 export class FoamWorkspace implements IDisposable {
   private onDidAddEmitter = new Emitter<{ id: string; resource: Resource }>();
@@ -30,7 +30,7 @@ export class FoamWorkspace implements IDisposable {
    * Resources by path
    */
   private _resources: TrieMap<string, Resource> = new TrieMap();
-  public _trainNoteService = TrainNoteService.fromWorkspace(this);
+  public trainNoteWorkspace = TrainNoteWorkspace.fromWorkspace(this);
 
   /**
    * @param defaultExtension: The default extension for notes in this workspace (e.g. `.md`)
