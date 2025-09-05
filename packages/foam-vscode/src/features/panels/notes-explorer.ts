@@ -4,6 +4,7 @@ import { FoamWorkspace } from '../../core/model/workspace';
 import {
   ResourceRangeTreeItem,
   ResourceTreeItem,
+  TrainTreeItem,
   createBacklinkItemsForResource as createBacklinkTreeItemsForResource,
   expandAll,
 } from './utils/tree-view-utils';
@@ -14,6 +15,7 @@ import {
   FolderTreeItem,
   FolderTreeProvider,
 } from './utils/folder-tree-provider';
+import { TrainNote } from '../../core/model/train-note';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -84,6 +86,7 @@ export function findTreeItemByUri<I, T>(
 
 export type NotesTreeItems =
   | ResourceTreeItem
+  | TrainTreeItem
   | FolderTreeItem<Resource>
   | ResourceRangeTreeItem;
 
@@ -124,7 +127,9 @@ export class NotesProvider extends FolderTreeProvider<
   }
 
   getValues() {
-    return this.workspace.list();
+    return this.workspace
+      .list()
+      .concat(this.workspace.trainNoteWorkspace.list());
   }
 
   getFilterFn() {
@@ -143,34 +148,131 @@ export class NotesProvider extends FolderTreeProvider<
   }
 
   createValueTreeItem(
-    value: Resource,
+    value: Resource | TrainNote,
     parent: FolderTreeItem<Resource>
   ): NotesTreeItems {
-    const item = new ResourceTreeItem(value, this.workspace, {
-      parent,
-      collapsibleState:
-        this.graph.getBacklinks(value.uri).length > 0
-          ? vscode.TreeItemCollapsibleState.Collapsed
-          : vscode.TreeItemCollapsibleState.None,
-    });
-    item.id = value.uri.toString();
-    item.getChildren = async () => {
+    const description =
+      value.uri.getName().toLowerCase() === value.title.toLowerCase()
+        ? undefined
+        : value.uri.getBasename();
+
+    const getChildren = async () => {
       const backlinks = await createBacklinkTreeItemsForResource(
         this.workspace,
         this.graph,
-        item.uri
+        value.uri
       );
-      backlinks.forEach(item => {
-        item.description = item.label;
-        item.label = item.resource.title;
+      backlinks.forEach(b => {
+        b.description = b.label;
+        b.label = b.resource.title;
       });
       return backlinks;
     };
-    item.description =
-      value.uri.getName().toLocaleLowerCase() ===
-      value.title.toLocaleLowerCase()
-        ? undefined
-        : value.uri.getBasename();
+
+    return new TreeFactory().make(
+      value,
+      this.workspace,
+      description,
+      getChildren,
+      {
+        parent: parent,
+        collapsibleState:
+          this.graph.getBacklinks(value.uri).length > 0
+            ? vscode.TreeItemCollapsibleState.Collapsed
+            : vscode.TreeItemCollapsibleState.None,
+      }
+    );
+  }
+}
+
+class TreeFactory {
+  make(
+    value: Resource | TrainNote,
+    workspace: FoamWorkspace,
+    description: string,
+    getChildren: () => Promise<vscode.TreeItem[]>,
+    options: {
+      collapsibleState?: vscode.TreeItemCollapsibleState;
+      parent?: FolderTreeItem<Resource>;
+    }
+  ) {
+    const builder =
+      value instanceof TrainNote
+        ? new TrainTreeBuilder(value, workspace)
+        : new ResourceTreeBuilder(value, workspace);
+
+    return builder
+      .setDescription(description)
+      .setChildrenGetter(getChildren)
+      .setOptions(options.parent, options.collapsibleState)
+      .build();
+  }
+}
+
+abstract class TreeBuilder<Tvalue, TtreeItem> {
+  protected value: Tvalue;
+  protected workspace: FoamWorkspace;
+  protected description: string;
+  protected getChildren: () => Promise<vscode.TreeItem[]>;
+  protected options: {
+    collapsibleState?: vscode.TreeItemCollapsibleState;
+    parent?: vscode.TreeItem;
+  };
+
+  constructor(value: Tvalue, workspace: FoamWorkspace) {
+    this.value = value;
+    this.workspace = workspace;
+  }
+
+  setOptions(
+    parent: FolderTreeItem<Resource>,
+    state: vscode.TreeItemCollapsibleState
+  ) {
+    this.options = {
+      collapsibleState: state,
+      parent: parent,
+    };
+    return this;
+  }
+
+  setDescription(description?: string) {
+    this.description = description;
+    return this;
+  }
+
+  setChildrenGetter(getChildren: () => Promise<vscode.TreeItem[]>) {
+    this.getChildren = getChildren;
+    return this;
+  }
+
+  setWorkspace(ws: FoamWorkspace) {
+    this.workspace = ws;
+    return this;
+  }
+
+  abstract build(): TtreeItem;
+}
+
+class ResourceTreeBuilder extends TreeBuilder<Resource, ResourceTreeItem> {
+  constructor(resource: Resource, workspace: FoamWorkspace) {
+    super(resource, workspace);
+  }
+
+  build(): ResourceTreeItem {
+    const item = new ResourceTreeItem(this.value, this.workspace, this.options);
+    item.id = this.value.uri.toString();
+    item.getChildren = async () => this.getChildren();
+    item.description = this.description;
+    return item;
+  }
+}
+
+class TrainTreeBuilder extends TreeBuilder<TrainNote, TrainTreeItem> {
+  override build(): TrainTreeItem {
+    const item = new TrainTreeItem(this.value, this.workspace, this.options);
+    item.id = this.value.uri.toString();
+    item.getChildren = async () => this.getChildren();
+    item.description = this.description;
     return item;
   }
 }
