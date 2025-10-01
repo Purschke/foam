@@ -70,7 +70,7 @@ export function createMarkdownParser(
   return new FrontmatterMarkdownDirector(parserMap);
 }
 
-const resourceFactory = (uri: URI): Resource => {
+export const resourceFactory = (uri: URI): Resource => {
   return {
     uri: uri,
     type: 'note',
@@ -82,6 +82,14 @@ const resourceFactory = (uri: URI): Resource => {
     aliases: [],
     links: [],
   };
+};
+
+export const trainFactory = (uri: URI): TrainNote => {
+  var trainNote = new TrainNote(phases);
+  var resource = resourceFactory(uri);
+  Object.assign(trainNote, resource);
+  trainNote.type = 'training-note';
+  return trainNote;
 };
 
 function NoteParser(extraPlugins: ParserPlugin<Resource>[]) {
@@ -113,14 +121,7 @@ function TrainNoteParser() {
     ReminderPlugin,
   ];
 
-  const factory = (uri: URI): TrainNote => {
-    var trainNote = new TrainNote(phases);
-    var resource = resourceFactory(uri);
-    Object.assign(trainNote, resource);
-    return trainNote;
-  };
-
-  const trainNoteParser = new FoamParser<TrainNote>(factory, ...plugins);
+  const trainNoteParser = new FoamParser<TrainNote>(trainFactory, ...plugins);
   return trainNoteParser;
 }
 
