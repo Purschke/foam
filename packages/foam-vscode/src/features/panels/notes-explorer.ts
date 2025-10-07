@@ -16,6 +16,7 @@ import {
   FolderTreeProvider,
 } from './utils/folder-tree-provider';
 import { TrainNote } from '../../core/model/train-note';
+import { URI } from '../../core/model/uri';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -156,24 +157,11 @@ export class NotesProvider extends FolderTreeProvider<
         ? undefined
         : value.uri.getBasename();
 
-    const getChildren = async () => {
-      const backlinks = await createBacklinkTreeItemsForResource(
-        this.workspace,
-        this.graph,
-        value.uri
-      );
-      backlinks.forEach(b => {
-        b.description = b.label;
-        b.label = b.resource.title;
-      });
-      return backlinks;
-    };
-
     return new TreeFactory().make(
       value,
       this.workspace,
       description,
-      getChildren,
+      this.graph,
       {
         parent: parent,
         collapsibleState:
@@ -190,7 +178,7 @@ class TreeFactory {
     value: Resource | TrainNote,
     workspace: FoamWorkspace,
     description: string,
-    getChildren: () => Promise<vscode.TreeItem[]>,
+    graph: FoamGraph,
     options: {
       collapsibleState?: vscode.TreeItemCollapsibleState;
       parent?: FolderTreeItem<Resource>;
@@ -198,22 +186,23 @@ class TreeFactory {
   ) {
     const builder =
       value instanceof TrainNote
-        ? new TrainTreeBuilder(value, workspace)
-        : new ResourceTreeBuilder(value, workspace);
+        ? new TrainTreeItemBuilder(value, workspace)
+        : new ResourceTreeItemBuilder(value, workspace);
 
     return builder
       .setDescription(description)
-      .setChildrenGetter(getChildren)
+      .setWorkspace(workspace)
       .setOptions(options.parent, options.collapsibleState)
+      .setGraph(graph)
       .build();
   }
 }
 
-abstract class TreeBuilder<Tvalue, TtreeItem> {
+abstract class TreeItemBuilder<Tvalue extends { uri: URI }, TtreeItem> {
   protected value: Tvalue;
   protected workspace: FoamWorkspace;
   protected description: string;
-  protected getChildren: () => Promise<vscode.TreeItem[]>;
+  protected graph: FoamGraph;
   protected options: {
     collapsibleState?: vscode.TreeItemCollapsibleState;
     parent?: vscode.TreeItem;
@@ -240,38 +229,55 @@ abstract class TreeBuilder<Tvalue, TtreeItem> {
     return this;
   }
 
-  setChildrenGetter(getChildren: () => Promise<vscode.TreeItem[]>) {
-    this.getChildren = getChildren;
-    return this;
-  }
-
   setWorkspace(ws: FoamWorkspace) {
     this.workspace = ws;
     return this;
   }
 
+  setGraph(graph: FoamGraph) {
+    this.graph = graph;
+    return this;
+  }
+
+  setChildren(graph: FoamGraph) {
+    return async () => {
+      const backlinks = await createBacklinkTreeItemsForResource(
+        this.workspace,
+        graph,
+        this.value.uri
+      );
+      backlinks.forEach(b => {
+        b.description = b.label;
+        b.label = b.resource.title;
+      });
+      return backlinks;
+    };
+  }
+
   abstract build(): TtreeItem;
 }
 
-class ResourceTreeBuilder extends TreeBuilder<Resource, ResourceTreeItem> {
-  constructor(resource: Resource, workspace: FoamWorkspace) {
-    super(resource, workspace);
-  }
-
+class ResourceTreeItemBuilder extends TreeItemBuilder<
+  Resource,
+  ResourceTreeItem
+> {
   build(): ResourceTreeItem {
     const item = new ResourceTreeItem(this.value, this.workspace, this.options);
     item.id = this.value.uri.toString();
-    item.getChildren = async () => this.getChildren();
+    item.getChildren = this.setChildren(this.graph);
     item.description = this.description;
     return item;
   }
 }
 
-class TrainTreeBuilder extends TreeBuilder<TrainNote, TrainTreeItem> {
-  override build(): TrainTreeItem {
+export class TrainTreeItemBuilder extends TreeItemBuilder<
+  TrainNote,
+  TrainTreeItem
+> {
+  build(): TrainTreeItem {
     const item = new TrainTreeItem(this.value, this.workspace, this.options);
     item.id = this.value.uri.toString();
-    item.getChildren = async () => this.getChildren();
+    item.getChildren = this.setChildren(this.graph);
     item.description = this.description;
     return item;
   }

@@ -10,6 +10,7 @@ import { getBlockFor } from '../../../core/services/markdown-parser';
 import { Connection, FoamGraph } from '../../../core/model/graph';
 import { Logger } from '../../../core/utils/log';
 import { getNoteTooltip } from '../../../services/editor';
+import { TrainNote } from 'packages/foam-vscode/src/core/model/train-note';
 
 export class BaseTreeItem extends vscode.TreeItem {
   resolveTreeItem(): Promise<vscode.TreeItem> {
@@ -79,7 +80,7 @@ export class ResourceTreeItem extends UriTreeItem {
 
 export class TrainTreeItem extends ResourceTreeItem {
   constructor(
-    resource: Resource,
+    resource: TrainNote,
     workspace: FoamWorkspace,
     options: {
       collapsibleState?: vscode.TreeItemCollapsibleState;
