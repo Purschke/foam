@@ -6,6 +6,7 @@ import { FoamWorkspace, TrieIdentifier } from './workspace';
 import { TrainNoteWriter } from '../services/Writer/train-note-writer';
 import { FrontmatterWriter } from '../../services/frontmatter-writer';
 import { WriteObserver } from '../utils/observer';
+import { Phase } from './phase';
 
 export class TrainNoteWorkspace implements IDisposable {
   private constructor() {}
@@ -42,6 +43,10 @@ export class TrainNoteWorkspace implements IDisposable {
     return this.list().filter(note =>
       TrainNoteWorkspace.isLate(note.nextReminder)
     );
+  }
+
+  public get(phase: Phase) {
+    return this.list().filter(note => note.currentPhase === phase);
   }
 
   private IsTrainNote(resource: Resource): {
