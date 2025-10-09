@@ -152,32 +152,20 @@ export class NotesProvider extends FolderTreeProvider<
     value: Resource | TrainNote,
     parent: FolderTreeItem<Resource>
   ): NotesTreeItems {
-    const description =
-      value.uri.getName().toLowerCase() === value.title.toLowerCase()
-        ? undefined
-        : value.uri.getBasename();
-
-    return new TreeFactory().make(
-      value,
-      this.workspace,
-      description,
-      this.graph,
-      {
-        parent: parent,
-        collapsibleState:
-          this.graph.getBacklinks(value.uri).length > 0
-            ? vscode.TreeItemCollapsibleState.Collapsed
-            : vscode.TreeItemCollapsibleState.None,
-      }
-    );
+    return new TreeFactory().make(value, this.workspace, this.graph, {
+      parent: parent,
+      collapsibleState:
+        this.graph.getBacklinks(value.uri).length > 0
+          ? vscode.TreeItemCollapsibleState.Collapsed
+          : vscode.TreeItemCollapsibleState.None,
+    });
   }
 }
 
-class TreeFactory {
+export class TreeFactory {
   make(
     value: Resource | TrainNote,
     workspace: FoamWorkspace,
-    description: string,
     graph: FoamGraph,
     options: {
       collapsibleState?: vscode.TreeItemCollapsibleState;
@@ -190,7 +178,7 @@ class TreeFactory {
         : new ResourceTreeItemBuilder(value, workspace);
 
     return builder
-      .setDescription(description)
+      .setDescription()
       .setWorkspace(workspace)
       .setOptions(options.parent, options.collapsibleState)
       .setGraph(graph)
@@ -224,10 +212,7 @@ abstract class TreeItemBuilder<Tvalue extends { uri: URI }, TtreeItem> {
     return this;
   }
 
-  setDescription(description?: string) {
-    this.description = description;
-    return this;
-  }
+  abstract setDescription(): this;
 
   setWorkspace(ws: FoamWorkspace) {
     this.workspace = ws;
@@ -261,6 +246,14 @@ class ResourceTreeItemBuilder extends TreeItemBuilder<
   Resource,
   ResourceTreeItem
 > {
+  setDescription() {
+    this.description =
+      this.value.uri.getName().toLowerCase() === this.value.title.toLowerCase()
+        ? undefined
+        : this.value.uri.getBasename();
+    return this;
+  }
+
   build(): ResourceTreeItem {
     const item = new ResourceTreeItem(this.value, this.workspace, this.options);
     item.id = this.value.uri.toString();
@@ -274,6 +267,14 @@ export class TrainTreeItemBuilder extends TreeItemBuilder<
   TrainNote,
   TrainTreeItem
 > {
+  setDescription() {
+    this.description =
+      this.value.uri.getName().toLowerCase() === this.value.title.toLowerCase()
+        ? undefined
+        : this.value.uri.getBasename();
+    return this;
+  }
+
   build(): TrainTreeItem {
     const item = new TrainTreeItem(this.value, this.workspace, this.options);
     item.id = this.value.uri.toString();
