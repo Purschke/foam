@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { Foam } from '../../core/model/foam';
-import { FoamWorkspace } from '../../core/model/workspace';
+import { FoamWorkspace } from '../../core/model/workspace/foamWorkspace';
 import {
   ResourceRangeTreeItem,
   ResourceTreeItem,
@@ -74,7 +74,7 @@ export default async function activate(
   );
 }
 
-export function findTreeItemByUri<I, T>(
+function findTreeItemByUri<I, T>(
   provider: FolderTreeProvider<I, T>,
   target: vscode.Uri
 ) {
