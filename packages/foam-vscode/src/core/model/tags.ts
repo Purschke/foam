@@ -1,4 +1,4 @@
-import { FoamWorkspace } from './workspace';
+import { FoamWorkspace } from './workspace/foamWorkspace';
 import { URI } from './uri';
 import { IDisposable } from '../common/lifecycle';
 import { debounce } from 'lodash';

@@ -1,17 +1,21 @@
-import TrieMap from 'mnemonist/trie-map';
-import { IDisposable } from '../common/lifecycle';
-import { Resource } from './note';
-import { TrainNote, TrainNoteStepper } from './train-note';
-import { FoamWorkspace, TrieIdentifier } from './workspace';
-import { TrainNoteWriter } from '../services/Writer/train-note-writer';
-import { FrontmatterWriter } from '../../services/frontmatter-writer';
-import { WriteObserver } from '../utils/observer';
-import { Phase } from './phase';
+import { IDisposable } from '../../common/lifecycle';
+import { Resource } from '.././note';
+import { TrainNote, TrainNoteStepper } from '.././train-note';
+import { TrainNoteWriter } from '../../services/Writer/train-note-writer';
+import { FrontmatterWriter } from '../../../services/frontmatter-writer';
+import { WriteObserver } from '../../utils/observer';
+import { FoamWorkspace } from './foamWorkspace';
+import { Workspace, TrieIdentifier } from './workspace';
 
-export class TrainNoteWorkspace implements IDisposable {
-  private constructor() {}
+export class TrainNoteWorkspace
+  extends Workspace<TrainNote>
+  implements IDisposable
+{
+  private constructor(defaultExtension: string = '.md') {
+    super();
+    this.defaultExtension = defaultExtension;
+  }
 
-  private _trainnotes: TrieMap<string, TrainNote> = new TrieMap();
   private disposables: IDisposable[] = [];
 
   private set(id: string, resource: Resource) {
@@ -19,18 +23,14 @@ export class TrainNoteWorkspace implements IDisposable {
     if (!isTrainNote.result) return;
 
     this.validateTrainNote(isTrainNote.value);
-    this._trainnotes.set(id, isTrainNote.value);
+    this._items.set(id, isTrainNote.value);
   }
 
   private delete(id: string, resource: Resource) {
     const isTrainNote = this.IsTrainNote(resource);
     if (!isTrainNote.result) return;
 
-    this._trainnotes.delete(id);
-  }
-
-  public list(): TrainNote[] {
-    return Array.from(this._trainnotes.values());
+    this._items.delete(id);
   }
 
   public today() {
@@ -43,10 +43,6 @@ export class TrainNoteWorkspace implements IDisposable {
     return this.list().filter(note =>
       TrainNoteWorkspace.isLate(note.nextReminder)
     );
-  }
-
-  public get(phase: Phase) {
-    return this.list().filter(note => note.currentPhase === phase);
   }
 
   private IsTrainNote(resource: Resource): {
@@ -79,7 +75,7 @@ export class TrainNoteWorkspace implements IDisposable {
     workspace
       .list()
       .forEach(res =>
-        service.set(new TrieIdentifier(service._trainnotes).get(res.uri), res)
+        service.set(new TrieIdentifier(service._items).get(res.uri), res)
       );
 
     service.disposables.push(

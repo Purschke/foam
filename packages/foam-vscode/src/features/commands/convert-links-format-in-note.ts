@@ -1,6 +1,6 @@
 import { commands, ExtensionContext, window, workspace, Uri } from 'vscode';
 import { Foam } from '../../core/model/foam';
-import { FoamWorkspace } from '../../core/model/workspace';
+import { FoamWorkspace } from '../../core/model/workspace/foamWorkspace';
 import { fromVsCodeUri, toVsCodeRange } from '../../utils/vsc-utils';
 import { ResourceParser } from '../../core/model/note';
 import { IMatcher } from '../../core/services/datastore';

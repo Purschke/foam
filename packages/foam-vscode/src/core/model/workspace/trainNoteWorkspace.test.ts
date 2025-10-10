@@ -2,10 +2,10 @@ import {
   createTestNote,
   createTestTrainNote,
   createTestWorkspace,
-} from '../../test/test-utils';
-import { Phase } from './phase';
+} from '../../../test/test-utils';
+import { Phase } from '.././phase';
 import { TrainNoteWorkspace } from './trainNoteWorkspace';
-import { URI } from './uri';
+import { URI } from '.././uri';
 
 describe('Synced trie', () => {
   it('Added', () => {

@@ -1,7 +1,7 @@
 /*global markdownit:readonly*/
 
 import markdownItRegex from 'markdown-it-regex';
-import { FoamWorkspace } from '../../core/model/workspace';
+import { FoamWorkspace } from '../../core/model/workspace/foamWorkspace';
 import { Logger } from '../../core/utils/log';
 import { isNone } from '../../core/utils';
 

@@ -1,7 +1,7 @@
 import { Resource, ResourceLink } from '../model/note';
 import { URI } from '../model/uri';
 import { Range } from '../model/range';
-import { FoamWorkspace } from '../model/workspace';
+import { FoamWorkspace } from '../model/workspace/foamWorkspace';
 import { isNone } from '../utils';
 import { MarkdownLink } from '../services/markdown-link';
 
