@@ -11,4 +11,4 @@ export { default as updateGraphCommand } from './update-graph';
 export { default as updateWikilinksCommand } from './update-wikilinks';
 export { default as createNote } from './create-note';
 export { default as generateStandaloneNote } from './convert-links-format-in-note';
-export { default as raisePhase } from './change-phase';
+export { default as changePhase } from './change-phase';
